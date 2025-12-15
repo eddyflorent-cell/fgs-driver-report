@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111111" />
+  <title>FGS Driver Report</title>
+
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+
+  <style>
+    :root{
+      --bg:#0b0c0f;
+      --card:#12141a;
+      --muted:#9aa3b2;
+      --text:#e9edf5;
+      --line:#23283a;
+      --accent:#4992db;
+      --danger:#ec4f21;
+      --ok:#9ece09;
+      --warn:#f49a1e;
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:linear-gradient(180deg,#0b0c0f,#07080a);
+      color:var(--text);
+    }
+    .wrap{max-width:980px;margin:0 auto;padding:16px}
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:14px 14px;border:1px solid var(--line);border-radius:var(--radius);
+      background:rgba(18,20,26,.85);backdrop-filter: blur(6px);
+      position:sticky;top:12px;z-index:10;
+    }
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{
+      width:36px;height:36px;border-radius:12px;
+      background:linear-gradient(135deg,var(--accent),#1b2d7a);
+      display:grid;place-items:center;font-weight:800;
+      box-shadow:0 10px 30px rgba(73,146,219,.15);
+    }
+    .brand h1{font-size:14px;margin:0}
+    .brand .sub{font-size:12px;color:var(--muted)}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    button,.btn{
+      border:1px solid var(--line);
+      background:#0f1117;color:var(--text);
+      border-radius:12px;padding:10px 12px;
+      cursor:pointer;font-weight:600;
+    }
+    button.primary{border-color:rgba(73,146,219,.6); background:rgba(73,146,219,.12)}
+    button.danger{border-color:rgba(236,79,33,.6); background:rgba(236,79,33,.12)}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    .grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+    @media (min-width:900px){ .grid{grid-template-columns:1.1fr .9fr} }
+    .card{
+      border:1px solid var(--line);
+      background:rgba(18,20,26,.85);
+      border-radius:var(--radius);
+      padding:14px;
+    }
+    h2{margin:0 0 8px 0;font-size:16px}
+    .muted{color:var(--muted);font-size:12px;margin:0}
+    .row{display:grid;grid-template-columns:1fr;gap:10px}
+    @media (min-width:700px){ .row.cols2{grid-template-columns:1fr 1fr} .row.cols3{grid-template-columns:1fr 1fr 1fr} }
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    input,select,textarea{
+      width:100%;padding:11px 12px;border-radius:12px;
+      border:1px solid var(--line); background:#0f1117;color:var(--text);
+      font:inherit;
+    }
+    textarea{min-height:90px;resize:vertical}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:6px 10px;border-radius:999px;
+      border:1px solid var(--line); background:#0f1117;
+      font-size:12px;color:var(--muted);
+    }
+    .pill b{color:var(--text)}
+    .split{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .tab{padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#0f1117;color:var(--muted);cursor:pointer;font-weight:700}
+    .tab.active{color:var(--text);border-color:rgba(73,146,219,.6);background:rgba(73,146,219,.12)}
+    .hide{display:none !important}
+    .list{display:grid;gap:10px;margin-top:10px}
+    .item{
+      border:1px solid var(--line);border-radius:14px;padding:12px;background:#0f1117;
+    }
+    .item .meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--muted);font-size:12px}
+    .k{color:var(--muted);font-size:12px}
+    .v{font-weight:800}
+    .badge{
+      display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:800;
+      border:1px solid var(--line);
+    }
+    .b-in{color:#b7d2ff;border-color:rgba(73,146,219,.4);background:rgba(73,146,219,.08)}
+    .b-out{color:#d7ffd1;border-color:rgba(158,206,9,.35);background:rgba(158,206,9,.08)}
+    .b-incident{color:#ffd2c8;border-color:rgba(236,79,33,.4);background:rgba(236,79,33,.08)}
+    .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .thumbs img{width:78px;height:78px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+    .note{font-size:12px;color:var(--muted);margin-top:8px}
+    .footer{margin:16px 0 0 0;color:var(--muted);font-size:12px}
+    .toast{
+      position:fixed;left:50%;bottom:20px;transform:translateX(-50%);
+      background:#0f1117;border:1px solid var(--line);color:var(--text);
+      padding:10px 12px;border-radius:14px;max-width:92vw;z-index:99;
+      box-shadow:0 10px 40px rgba(0,0,0,.35);
+      display:none;
+    }
+    .toast.show{display:block}
+    .divider{height:1px;background:var(--line);margin:12px 0}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">FGS</div>
+        <div>
+          <h1>FGS Driver Report</h1>
+          <div class="sub" id="subline">Offline • Check-in / Check-out • Export</div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="primary" id="btnInstall" disabled>Installer</button>
+        <button id="btnExport">Exporter</button>
+        <button class="danger" id="btnReset">Reset</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="tabHome">Accueil</div>
+      <div class="tab" data-tab="tabCheckin">Check-in</div>
+      <div class="tab" data-tab="tabCheckout">Check-out</div>
+      <div class="tab" data-tab="tabIncidents">Incident</div>
+      <div class="tab" data-tab="tabHistory">Historique</div>
+      <div class="tab" data-tab="tabSettings">Réglages</div>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT -->
+      <div class="card" id="tabHome">
+        <h2>Tableau rapide</h2>
+        <p class="muted">But : capturer le minimum anti-fraude (km + carburant + preuve versement). Tout se stocke sur le téléphone et se synchronise quand il y a du réseau.</p>
+        <div class="divider"></div>
+
+        <div class="split">
+          <span class="pill">Chauffeur : <b id="pillDriver">—</b></span>
+          <span class="pill">Véhicule : <b id="pillVehicle">—</b></span>
+          <span class="pill">Mode : <b>Option A (fixe)</b></span>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row cols3">
+          <div>
+            <div class="k">Aujourd’hui</div>
+            <div class="v" id="kpiToday">0</div>
+            <div class="muted">événements</div>
+          </div>
+          <div>
+            <div class="k">Dernier check-in</div>
+            <div class="v" id="kpiLastIn">—</div>
+            <div class="muted">km / heure</div>
+          </div>
+          <div>
+            <div class="k">Dernier check-out</div>
+            <div class="v" id="kpiLastOut">—</div>
+            <div class="muted">versement</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row cols2">
+          <button class="primary" id="goCheckin">Faire un Check-in</button>
+          <button class="primary" id="goCheckout">Faire un Check-out</button>
+        </div>
+
+        <p class="footer">Astuce terrain : si le réseau est faible, fais les photos, valide. Ça partira plus tard.</p>
+      </div>
+
+      <!-- RIGHT (context) -->
+      <div class="card" id="sideCard">
+        <h2>Statut</h2>
+        <div class="row">
+          <div class="pill" id="netPill">Réseau : <b id="netState">—</b></div>
+          <div class="pill">Stock local : <b id="localCount">0</b> enregistrements</div>
+          <div class="pill">Dernier export : <b id="lastExport">—</b></div>
+        </div>
+        <div class="divider"></div>
+        <h2>Raccourcis</h2>
+        <div class="row">
+          <button id="btnShareLast">Partager dernier résumé</button>
+          <button id="btnExportCSV">Exporter CSV</button>
+          <button id="btnExportJSON">Exporter JSON</button>
+        </div>
+        <p class="note">Sans serveur, “sync” = export/partage vers Wendy (WhatsApp, email, cloud…). Quand tu voudras, on branchera un back-office.</p>
+      </div>
+
+      <!-- CHECK-IN -->
+      <div class="card hide" id="tabCheckin">
+        <h2>Check-in (matin)</h2>
+        <p class="muted">Minimum : photo compteur + photo jauge.</p>
+
+        <div class="row cols2" style="margin-top:10px;">
+          <div>
+            <label>Date</label>
+            <input id="inDate" type="date" />
+          </div>
+          <div>
+            <label>Heure</label>
+            <input id="inTime" type="time" />
+          </div>
+        </div>
+
+        <div class="row cols3" style="margin-top:10px;">
+          <div>
+            <label>Kilométrage départ</label>
+            <input id="inKm" type="number" inputmode="numeric" placeholder="ex: 125430" />
+          </div>
+          <div>
+            <label>Carburant départ</label>
+            <select id="inFuel">
+              <option value="">—</option>
+              <option>Vide</option>
+              <option>1/8</option>
+              <option>1/4</option>
+              <option>3/8</option>
+              <option>1/2</option>
+              <option>5/8</option>
+              <option>3/4</option>
+              <option>7/8</option>
+              <option>Plein</option>
+            </select>
+          </div>
+          <div>
+            <label>État</label>
+            <select id="inState">
+              <option value="OK">OK</option>
+              <option value="À surveiller">À surveiller</option>
+              <option value="Problème">Problème</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row cols2" style="margin-top:10px;">
+          <div>
+            <label>Photo compteur (obligatoire)</label>
+            <input id="inPhotoKm" type="file" accept="image/*" capture="environment" />
+          </div>
+          <div>
+            <label>Photo jauge (obligatoire)</label>
+            <input id="inPhotoFuel" type="file" accept="image/*" capture="environment" />
+          </div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <label>Note (optionnel)</label>
+          <textarea id="inNote" placeholder="ex: rayure pare-choc / voyant moteur / pneu..."></textarea>
+        </div>
+
+        <div class="row cols2" style="margin-top:10px;">
+          <button class="primary" id="btnSaveCheckin">Enregistrer Check-in</button>
+          <button id="btnCancelCheckin">Annuler</button>
+        </div>
+      </div>
+
+      <!-- CHECK-OUT -->
+      <div class="card hide" id="tabCheckout">
+        <h2>Check-out (soir)</h2>
+        <p class="muted">Minimum : photo compteur + photo jauge + preuve versement (OM/MoMo si possible).</p>
+
+        <div class="row cols2" style="margin-top:10px;">
+          <div>
+            <label>Date</label>
+            <input id="outDate" type="date" />
+          </div>
+          <div>
+            <label>Heure</label>
+            <input id="outTime" type="time" />
+          </div>
+        </div>
+
+        <div class="row cols3" style="margin-top:10px;">
+          <div>
+            <label>Kilométrage retour</label>
+            <input id="outKm" type="number" inputmode="numeric" placeholder="ex: 125612" />
+          </div>
+          <div>
+            <label>Carburant retour</label>
+            <select id="outFuel">
+              <option value="">—</option>
+              <option>Vide</option>
+              <option>1/8</option>
+              <option>1/4</option>
+              <option>3/8</option>
+              <option>1/2</option>
+              <option>5/8</option>
+              <option>3/4</option>
+              <option>7/8</option>
+              <option>Plein</option>
+            </select>
+          </div>
+          <div>
+            <label>Résumé</label>
+            <select id="outState">
+              <option value="OK">OK</option>
+              <option value="À surveiller">À surveiller</option>
+              <option value="Incident à traiter">Incident à traiter</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row cols2" style="margin-top:10px;">
+          <div>
+            <label>Photo compteur (obligatoire)</label>
+            <input id="outPhotoKm" type="file" accept="image/*" capture="environment" />
+          </div>
+          <div>
+            <label>Photo jauge (obligatoire)</label>
+            <input id="outPhotoFuel" type="file" accept="image/*" capture="environment" />
+          </div>
+        </div>
+
+        <div class="row cols3" style="margin-top:10px;">
+          <div>
+            <label>Fixe dû (FCFA)</label>
+            <input id="outDue" type="number" inputmode="numeric" placeholder="ex: 15000" />
+          </div>
+          <div>
+            <label>Fixe versé (FCFA)</label>
+            <input id="outPaid" type="number" inputmode="numeric" placeholder="ex: 15000" />
+          </div>
+          <div>
+            <label>Mode</label>
+            <select id="outPayMode">
+              <option value="">—</option>
+              <option>Orange Money</option>
+              <option>MTN MoMo</option>
+              <option>Cash</option>
+              <option>Virement</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row cols2" style="margin-top:10px;">
+          <div>
+            <label>Référence / preuve (txn / capture)</label>
+            <input id="outTxn" type="text" placeholder="ex: TXN123456 / 'capture envoyée'" />
+          </div>
+          <div>
+            <label>Capture écran (optionnel)</label>
+            <input id="outPhotoProof" type="file" accept="image/*" />
+          </div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <label>Note (optionnel)</label>
+          <textarea id="outNote" placeholder="ex: contrôle police / client / bruit suspect..."></textarea>
+        </div>
+
+        <div class="row cols2" style="margin-top:10px;">
+          <button class="primary" id="btnSaveCheckout">Enregistrer Check-out</button>
+          <button id="btnCancelCheckout">Annuler</button>
+        </div>
+      </div>
+
+      <!-- INCIDENT -->
+      <div class="card hide" id="tabIncidents">
+        <h2>Incident</h2>
+        <p class="muted">Accident, panne, amende, altercation, etc.</p>
+
+        <div class="row cols2" style="margin-top:10px;">
+          <div>
+            <label>Date</label>
+            <input id="incDate" type="date" />
+          </div>
+          <div>
+            <label>Heure</label>
+            <input id="incTime" type="time" />
+          </div>
+        </div>
+
+        <div class="row cols2" style="margin-top:10px;">
+          <div>
+            <label>Type</label>
+            <select id="incType">
+              <option value="">—</option>
+              <option>Panne</option>
+              <option>Accident</option>
+              <option>Amende / contrôle</option>
+              <option>Litige client</option>
+              <option>Autre</option>
+            </select>
+          </div>
+          <div>
+            <label>Photo (optionnel)</label>
+            <input id="incPhoto" type="file" accept="image/*" capture="environment" />
+          </div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <label>Description (obligatoire)</label>
+          <textarea id="incDesc" placeholder="Décris ce qui s’est passé, où, avec qui, et ce que tu as fait."></textarea>
+        </div>
+
+        <div class="row cols2" style="margin-top:10px;">
+          <button class="primary" id="btnSaveIncident">Enregistrer incident</button>
+          <button id="btnCancelIncident">Annuler</button>
+        </div>
+      </div>
+
+      <!-- HISTORY -->
+      <div class="card hide" id="tabHistory">
+        <div class="split">
+          <div>
+            <h2>Historique</h2>
+            <p class="muted">Tout est local sur le téléphone. Tu exportes/partages quand tu veux.</p>
+          </div>
+          <div class="row cols2" style="min-width:260px;">
+            <div>
+              <label>Filtre date</label>
+              <input id="histDate" type="date" />
+            </div>
+            <div style="display:flex;align-items:end;gap:8px;">
+              <button id="btnClearFilter">Effacer filtre</button>
+            </div>
+          </div>
+        </div>
+        <div class="list" id="historyList"></div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="card hide" id="tabSettings">
+        <h2>Réglages</h2>
+        <p class="muted">Ces infos servent à pré-remplir et à signer les rapports.</p>
+
+        <div class="row cols2" style="margin-top:10px;">
+          <div>
+            <label>Nom chauffeur</label>
+            <input id="setDriver" type="text" placeholder="ex: Nkoumou Jean" />
+          </div>
+          <div>
+            <label>Téléphone chauffeur</label>
+            <input id="setPhone" type="tel" placeholder="ex: +237 6.." />
+          </div>
+        </div>
+
+        <div class="row cols2" style="margin-top:10px;">
+          <div>
+            <label>Véhicule (modèle)</label>
+            <input id="setVehicle" type="text" placeholder="ex: Yaris" />
+          </div>
+          <div>
+            <label>Immatriculation</label>
+            <input id="setPlate" type="text" placeholder="ex: LT 123 AB" />
+          </div>
+        </div>
+
+        <div class="row cols3" style="margin-top:10px;">
+          <div>
+            <label>Fixe/jour par défaut (FCFA)</label>
+            <input id="setDailyFixed" type="number" inputmode="numeric" placeholder="ex: 15000" />
+          </div>
+          <div>
+            <label>Manager (nom)</label>
+            <input id="setManager" type="text" placeholder="ex: Wendy" />
+          </div>
+          <div>
+            <label>WhatsApp manager (num)</label>
+            <input id="setManagerPhone" type="tel" placeholder="ex: +237..." />
+          </div>
+        </div>
+
+        <div class="row cols2" style="margin-top:10px;">
+          <button class="primary" id="btnSaveSettings">Enregistrer réglages</button>
+          <button id="btnTestShare">Tester partage WhatsApp</button>
+        </div>
+
+        <p class="note">Quand tu voudras : on ajoute un “code chauffeur” + une vue manager (PIN) + un export automatique en fin de journée.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // =========================
+    // Utils
+    // =========================
+    const $ = (id) => document.getElementById(id);
+    const toastEl = $("toast");
+    function toast(msg){
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      clearTimeout(toastEl._t);
+      toastEl._t = setTimeout(()=>toastEl.classList.remove("show"), 2200);
+    }
+    function todayISO(){
+      const d = new Date();
+      const tz = d.getTimezoneOffset() * 60000;
+      return new Date(d - tz).toISOString().slice(0,10);
+    }
+    function nowTime(){
+      const d = new Date();
+      const hh = String(d.getHours()).padStart(2,"0");
+      const mm = String(d.getMinutes()).padStart(2,"0");
+      return `${hh}:${mm}`;
+    }
+    async function fileToDataUrl(file, maxW=1280, quality=0.72){
+      if(!file) return null;
+      // compress to keep storage reasonable
+      const img = await new Promise((res, rej)=>{
+        const i = new Image();
+        i.onload=()=>res(i);
+        i.onerror=rej;
+        i.src = URL.createObjectURL(file);
+      });
+      const scale = Math.min(1, maxW / img.width);
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, w, h);
+      const data = canvas.toDataURL("image/jpeg", quality);
+      URL.revokeObjectURL(img.src);
+      return data;
+    }
+    function download(filename, content, mime="application/json"){
+      const blob = new Blob([content], {type:mime});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 500);
+    }
+    function csvEscape(v){
+      if(v === null || v === undefined) return "";
+      const s = String(v).replaceAll('"','""');
+      return `"${s}"`;
+    }
+
+    // =========================
+    // Storage
+    // =========================
+    const KEY_SETTINGS = "fgs_settings_v1";
+    const KEY_RECORDS = "fgs_records_v1";
+    function loadSettings(){
+      try { return JSON.parse(localStorage.getItem(KEY_SETTINGS) || "{}"); }
+      catch { return {}; }
+    }
+    function saveSettings(obj){
+      localStorage.setItem(KEY_SETTINGS, JSON.stringify(obj));
+    }
+    function loadRecords(){
+      try { return JSON.parse(localStorage.getItem(KEY_RECORDS) || "[]"); }
+      catch { return []; }
+    }
+    function saveRecords(arr){
+      localStorage.setItem(KEY_RECORDS, JSON.stringify(arr));
+    }
+    function addRecord(rec){
+      const arr = loadRecords();
+      arr.unshift(rec);
+      saveRecords(arr);
+      return arr;
+    }
+    function resetAll(){
+      localStorage.removeItem(KEY_SETTINGS);
+      localStorage.removeItem(KEY_RECORDS);
+    }
+
+    // =========================
+    // Tabs
+    // =========================
+    const tabs = [...document.querySelectorAll(".tab")];
+    const tabIds = ["tabHome","tabCheckin","tabCheckout","tabIncidents","tabHistory","tabSettings"];
+    function showTab(id){
+      tabIds.forEach(t => $(t).classList.toggle("hide", t !== id));
+      tabs.forEach(b => b.classList.toggle("active", b.dataset.tab === id));
+      if(id === "tabHistory") renderHistory();
+      if(id === "tabSettings") fillSettingsForm();
+    }
+    tabs.forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
+
+    // =========================
+    // Network state
+    // =========================
+    function updateNet(){
+      const online = navigator.onLine;
+      $("netState").textContent = online ? "OK" : "OFFLINE";
+      $("netPill").style.borderColor = online ? "rgba(158,206,9,.35)" : "rgba(236,79,33,.45)";
+      $("netPill").style.background = online ? "rgba(158,206,9,.08)" : "rgba(236,79,33,.10)";
+    }
+    window.addEventListener("online", updateNet);
+    window.addEventListener("offline", updateNet);
+
+    // =========================
+    // Settings + prefill
+    // =========================
+    function fillPills(){
+      const s = loadSettings();
+      $("pillDriver").textContent = s.driver || "—";
+      const veh = [s.vehicle, s.plate].filter(Boolean).join(" • ");
+      $("pillVehicle").textContent = veh || "—";
+    }
+    function fillSettingsForm(){
+      const s = loadSettings();
+      $("setDriver").value = s.driver || "";
+      $("setPhone").value = s.phone || "";
+      $("setVehicle").value = s.vehicle || "";
+      $("setPlate").value = s.plate || "";
+      $("setDailyFixed").value = s.dailyFixed ?? "";
+      $("setManager").value = s.manager || "";
+      $("setManagerPhone").value = s.managerPhone || "";
+    }
+    $("btnSaveSettings").addEventListener("click", ()=>{
+      const s = {
+        driver: $("setDriver").value.trim(),
+        phone: $("setPhone").value.trim(),
+        vehicle: $("setVehicle").value.trim(),
+        plate: $("setPlate").value.trim(),
+        dailyFixed: Number($("setDailyFixed").value || 0) || 0,
+        manager: $("setManager").value.trim(),
+        managerPhone: $("setManagerPhone").value.trim(),
+        updatedAt: new Date().toISOString()
+      };
+      saveSettings(s);
+      fillPills();
+      toast("Réglages enregistrés");
+      renderKpis();
+    });
+
+    // =========================
+    // Prefill date/time
+    // =========================
+    function prefillDateTime(){
+      const d = todayISO();
+      const t = nowTime();
+      $("inDate").value = d; $("inTime").value = t;
+      $("outDate").value = d; $("outTime").value = t;
+      $("incDate").value = d; $("incTime").value = t;
+      const s = loadSettings();
+      if(s.dailyFixed){
+        $("outDue").value = s.dailyFixed;
+      }
+    }
+
+    // =========================
+    // Save Check-in
+    // =========================
+    $("btnSaveCheckin").addEventListener("click", async ()=>{
+      const s = loadSettings();
+      const date = $("inDate").value;
+      const time = $("inTime").value;
+      const km = Number($("inKm").value);
+      const fuel = $("inFuel").value;
+      const state = $("inState").value;
+      const note = $("inNote").value.trim();
+
+      if(!date || !time){ toast("Date/heure manquantes"); return; }
+      if(!Number.isFinite(km) || km <= 0){ toast("Kilométrage invalide"); return; }
+      if(!fuel){ toast("Carburant manquant"); return; }
+      if(!$("inPhotoKm").files[0] || !$("inPhotoFuel").files[0]){ toast("Photos compteur + jauge obligatoires"); return; }
+
+      $("btnSaveCheckin").disabled = true;
+
+      const photoKm = await fileToDataUrl($("inPhotoKm").files[0]);
+      const photoFuel = await fileToDataUrl($("inPhotoFuel").files[0]);
+
+      const rec = {
+        id: crypto.randomUUID(),
+        type: "checkin",
+        createdAt: new Date().toISOString(),
+        date, time,
+        driver: s.driver || "",
+        phone: s.phone || "",
+        vehicle: s.vehicle || "",
+        plate: s.plate || "",
+        km, fuel, state, note,
+        photos: { odometer: photoKm, fuel: photoFuel }
+      };
+      addRecord(rec);
+      $("inKm").value = "";
+      $("inFuel").value = "";
+      $("inState").value = "OK";
+      $("inNote").value = "";
+      $("inPhotoKm").value = "";
+      $("inPhotoFuel").value = "";
+      $("btnSaveCheckin").disabled = false;
+
+      toast("Check-in enregistré");
+      renderKpis();
+      showTab("tabHome");
+    });
+    $("btnCancelCheckin").addEventListener("click", ()=> showTab("tabHome"));
+
+    // =========================
+    // Save Check-out
+    // =========================
+    $("btnSaveCheckout").addEventListener("click", async ()=>{
+      const s = loadSettings();
+      const date = $("outDate").value;
+      const time = $("outTime").value;
+      const km = Number($("outKm").value);
+      const fuel = $("outFuel").value;
+      const state = $("outState").value;
+      const due = Number($("outDue").value);
+      const paid = Number($("outPaid").value);
+      const payMode = $("outPayMode").value;
+      const txn = $("outTxn").value.trim();
+      const note = $("outNote").value.trim();
+
+      if(!date || !time){ toast("Date/heure manquantes"); return; }
+      if(!Number.isFinite(km) || km <= 0){ toast("Kilométrage invalide"); return; }
+      if(!fuel){ toast("Carburant manquant"); return; }
+      if(!Number.isFinite(due) || due <= 0){ toast("Fixe dû invalide"); return; }
+      if(!Number.isFinite(paid) || paid < 0){ toast("Fixe versé invalide"); return; }
+      if(!payMode){ toast("Mode de paiement manquant"); return; }
+      if(!$("outPhotoKm").files[0] || !$("outPhotoFuel").files[0]){ toast("Photos compteur + jauge obligatoires"); return; }
+
+      $("btnSaveCheckout").disabled = true;
+
+      const photoKm = await fileToDataUrl($("outPhotoKm").files[0]);
+      const photoFuel = await fileToDataUrl($("outPhotoFuel").files[0]);
+      const proof = $("outPhotoProof").files[0] ? await fileToDataUrl($("outPhotoProof").files[0], 1280, 0.7) : null;
+
+      const rec = {
+        id: crypto.randomUUID(),
+        type: "checkout",
+        createdAt: new Date().toISOString(),
+        date, time,
+        driver: s.driver || "",
+        phone: s.phone || "",
+        vehicle: s.vehicle || "",
+        plate: s.plate || "",
+        km, fuel, state,
+        fixedDue: due,
+        fixedPaid: paid,
+        payMode,
+        txn,
+        note,
+        photos: { odometer: photoKm, fuel: photoFuel, proof }
+      };
+      addRecord(rec);
+
+      $("outKm").value = "";
+      $("outFuel").value = "";
+      $("outState").value = "OK";
+      $("outPaid").value = "";
+      $("outPayMode").value = "";
+      $("outTxn").value = "";
+      $("outNote").value = "";
+      $("outPhotoKm").value = "";
+      $("outPhotoFuel").value = "";
+      $("outPhotoProof").value = "";
+      $("btnSaveCheckout").disabled = false;
+
+      toast("Check-out enregistré");
+      renderKpis();
+      showTab("tabHome");
+    });
+    $("btnCancelCheckout").addEventListener("click", ()=> showTab("tabHome"));
+
+    // =========================
+    // Save Incident
+    // =========================
+    $("btnSaveIncident").addEventListener("click", async ()=>{
+      const s = loadSettings();
+      const date = $("incDate").value;
+      const time = $("incTime").value;
+      const type = $("incType").value;
+      const desc = $("incDesc").value.trim();
+
+      if(!date || !time){ toast("Date/heure manquantes"); return; }
+      if(!desc){ toast("Description obligatoire"); return; }
+
+      $("btnSaveIncident").disabled = true;
+
+      const photo = $("incPhoto").files[0] ? await fileToDataUrl($("incPhoto").files[0]) : null;
+
+      const rec = {
+        id: crypto.randomUUID(),
+        type: "incident",
+        createdAt: new Date().toISOString(),
+        date, time,
+        driver: s.driver || "",
+        phone: s.phone || "",
+        vehicle: s.vehicle || "",
+        plate: s.plate || "",
+        incidentType: type || "—",
+        desc,
+        photos: { photo }
+      };
+      addRecord(rec);
+
+      $("incType").value = "";
+      $("incDesc").value = "";
+      $("incPhoto").value = "";
+      $("btnSaveIncident").disabled = false;
+
+      toast("Incident enregistré");
+      renderKpis();
+      showTab("tabHome");
+    });
+    $("btnCancelIncident").addEventListener("click", ()=> showTab("tabHome"));
+
+    // =========================
+    // History
+    // =========================
+    function fmtDT(date, time){ return `${date} • ${time}`; }
+    function renderHistory(){
+      const list = $("historyList");
+      list.innerHTML = "";
+      const filterDate = $("histDate").value;
+      let recs = loadRecords();
+      if(filterDate) recs = recs.filter(r => r.date === filterDate);
+
+      $("localCount").textContent = recs.length;
+
+      if(recs.length === 0){
+        list.innerHTML = `<div class="item"><div class="muted">Aucun enregistrement.</div></div>`;
+        return;
+      }
+
+      for(const r of recs){
+        const badge = r.type === "checkin" ? `<span class="badge b-in">CHECK-IN</span>`
+                    : r.type === "checkout" ? `<span class="badge b-out">CHECK-OUT</span>`
+                    : `<span class="badge b-incident">INCIDENT</span>`;
+        const title = `${badge} <span class="pill" style="margin-left:8px;">${fmtDT(r.date, r.time)}</span>`;
+        const veh = [r.vehicle, r.plate].filter(Boolean).join(" • ");
+        const kmLine = r.type === "incident" ? "" : `<div class="meta"><span>Kilométrage: <b>${r.km}</b></span> <span>Carburant: <b>${r.fuel}</b></span></div>`;
+        const fixedLine = r.type === "checkout"
+          ? `<div class="meta"><span>Fixe dû: <b>${r.fixedDue}</b></span> <span>Versé: <b>${r.fixedPaid}</b></span> <span>${r.payMode || ""}</span></div>`
+          : "";
+        const incLine = r.type === "incident"
+          ? `<div class="meta"><span>Type: <b>${r.incidentType}</b></span></div><div class="muted" style="margin-top:6px;white-space:pre-wrap;">${escapeHtml(r.desc)}</div>`
+          : (r.note ? `<div class="muted" style="margin-top:6px;white-space:pre-wrap;">${escapeHtml(r.note)}</div>` : "");
+
+        const thumbs = [];
+        if(r.photos?.odometer) thumbs.push(r.photos.odometer);
+        if(r.photos?.fuel) thumbs.push(r.photos.fuel);
+        if(r.photos?.proof) thumbs.push(r.photos.proof);
+        if(r.photos?.photo) thumbs.push(r.photos.photo);
+
+        const imgs = thumbs.length ? `<div class="thumbs">${thumbs.map(src=>`<img src="${src}" alt="photo" />`).join("")}</div>` : "";
+
+        const item = document.createElement("div");
+        item.className = "item";
+        item.innerHTML = `
+          <div class="meta">${title}</div>
+          <div class="meta" style="margin-top:6px;">
+            <span>Chauffeur: <b>${escapeHtml(r.driver || "—")}</b></span>
+            <span>Véhicule: <b>${escapeHtml(veh || "—")}</b></span>
+          </div>
+          ${kmLine}
+          ${fixedLine}
+          ${incLine}
+          ${imgs}
+          <div class="divider"></div>
+          <div class="row cols2">
+            <button data-id="${r.id}" class="btnShareOne">Partager résumé</button>
+            <button data-id="${r.id}" class="btnDeleteOne danger">Supprimer</button>
+          </div>
+        `;
+        list.appendChild(item);
+      }
+
+      // wire buttons
+      document.querySelectorAll(".btnDeleteOne").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const id = btn.getAttribute("data-id");
+          const arr = loadRecords().filter(r => r.id !== id);
+          saveRecords(arr);
+          toast("Supprimé");
+          renderHistory();
+          renderKpis();
+        });
+      });
+      document.querySelectorAll(".btnShareOne").forEach(btn=>{
+        btn.addEventListener("click", async ()=>{
+          const id = btn.getAttribute("data-id");
+          const rec = loadRecords().find(r => r.id === id);
+          if(!rec) return;
+          await shareSummary(rec);
+        });
+      });
+    }
+    function escapeHtml(s){
+      return String(s||"")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    $("histDate").addEventListener("change", renderHistory);
+    $("btnClearFilter").addEventListener("click", ()=>{
+      $("histDate").value = "";
+      renderHistory();
+    });
+
+    // =========================
+    // KPIs
+    // =========================
+    function renderKpis(){
+      const recs = loadRecords();
+      $("localCount").textContent = recs.length;
+      const d = todayISO();
+      const today = recs.filter(r => r.date === d);
+      $("kpiToday").textContent = today.length;
+
+      const lastIn = recs.find(r => r.type === "checkin");
+      const lastOut = recs.find(r => r.type === "checkout");
+
+      $("kpiLastIn").textContent = lastIn ? `${lastIn.km} • ${lastIn.time}` : "—";
+      $("kpiLastOut").textContent = lastOut ? `${lastOut.fixedPaid || 0} FCFA • ${lastOut.time}` : "—";
+    }
+
+    // =========================
+    // Export
+    // =========================
+    function exportJSON(){
+      const s = loadSettings();
+      const recs = loadRecords();
+      const pack = { exportedAt: new Date().toISOString(), settings: s, records: recs };
+      const name = `FGS-DriverReport-${todayISO()}.json`;
+      download(name, JSON.stringify(pack, null, 2), "application/json");
+      localStorage.setItem("fgs_last_export", new Date().toISOString());
+      $("lastExport").textContent = new Date().toLocaleString();
+      toast("Export JSON généré");
+    }
+    function exportCSV(){
+      const recs = loadRecords();
+      // one CSV line per record (photos excluded)
+      const headers = ["type","date","time","driver","phone","vehicle","plate","km","fuel","state","fixedDue","fixedPaid","payMode","txn","note","incidentType","desc","createdAt","id"];
+      const lines = [headers.map(csvEscape).join(",")];
+      for(const r of recs){
+        const row = [
+          r.type, r.date, r.time, r.driver, r.phone, r.vehicle, r.plate,
+          r.km ?? "", r.fuel ?? "", r.state ?? "",
+          r.fixedDue ?? "", r.fixedPaid ?? "", r.payMode ?? "", r.txn ?? "",
+          r.note ?? "", r.incidentType ?? "", r.desc ?? "",
+          r.createdAt ?? "", r.id ?? ""
+        ];
+        lines.push(row.map(csvEscape).join(","));
+      }
+      const name = `FGS-DriverReport-${todayISO()}.csv`;
+      download(name, lines.join("\n"), "text/csv");
+      localStorage.setItem("fgs_last_export", new Date().toISOString());
+      $("lastExport").textContent = new Date().toLocaleString();
+      toast("Export CSV généré");
+    }
+
+    $("btnExport").addEventListener("click", exportJSON);
+    $("btnExportJSON").addEventListener("click", exportJSON);
+    $("btnExportCSV").addEventListener("click", exportCSV);
+
+    // =========================
+    // Share
+    // =========================
+    function buildSummary(r){
+      const veh = [r.vehicle, r.plate].filter(Boolean).join(" • ");
+      const base = [
+        "FGS REPORT",
+        `${r.type.toUpperCase()} — ${r.date} ${r.time}`,
+        `Chauffeur: ${r.driver || "—"} (${r.phone || "—"})`,
+        `Véhicule: ${veh || "—"}`
+      ];
+      if(r.type === "checkin"){
+        base.push(`KM départ: ${r.km} | Carburant: ${r.fuel} | État: ${r.state}`);
+        if(r.note) base.push(`Note: ${r.note}`);
+      }else if(r.type === "checkout"){
+        base.push(`KM retour: ${r.km} | Carburant: ${r.fuel} | Résumé: ${r.state}`);
+        base.push(`Fixe: dû ${r.fixedDue} / versé ${r.fixedPaid} | ${r.payMode}${r.txn ? " | Ref: "+r.txn : ""}`);
+        if(r.note) base.push(`Note: ${r.note}`);
+      }else{
+        base.push(`Incident: ${r.incidentType}`);
+        base.push(`Détails: ${r.desc}`);
+      }
+      return base.join("\n");
+    }
+
+    async function shareSummary(r){
+      const text = buildSummary(r);
+      // Prefer native share
+      if(navigator.share){
+        try{
+          // Include images as files if supported (best-effort)
+          const files = [];
+          const imgData = [];
+          if(r.photos?.odometer) imgData.push({name:"odometer.jpg", data:r.photos.odometer});
+          if(r.photos?.fuel) imgData.push({name:"fuel.jpg", data:r.photos.fuel});
+          if(r.photos?.proof) imgData.push({name:"proof.jpg", data:r.photos.proof});
+          if(r.photos?.photo) imgData.push({name:"photo.jpg", data:r.photos.photo});
+
+          for(const it of imgData){
+            const blob = await (await fetch(it.data)).blob();
+            files.push(new File([blob], it.name, {type: blob.type || "image/jpeg"}));
+          }
+
+          const payload = { title: "FGS Driver Report", text };
+          // Some browsers require canShare for files
+          if(files.length && navigator.canShare && navigator.canShare({files})){
+            payload.files = files;
+          }
+          await navigator.share(payload);
+          toast("Partagé");
+          return;
+        }catch(e){
+          // fallthrough
+        }
+      }
+      // WhatsApp deep link (text only)
+      const s = loadSettings();
+      const manager = (s.managerPhone || "").replaceAll(" ","");
+      const wa = manager ? `https://wa.me/${manager.replaceAll("+","")}?text=` : `https://wa.me/?text=`;
+      const url = wa + encodeURIComponent(text);
+      window.open(url, "_blank");
+    }
+
+    $("btnShareLast").addEventListener("click", async ()=>{
+      const recs = loadRecords();
+      if(!recs.length){ toast("Rien à partager"); return; }
+      await shareSummary(recs[0]);
+    });
+
+    $("btnTestShare").addEventListener("click", async ()=>{
+      const fake = {
+        type:"checkout", date:todayISO(), time:nowTime(),
+        driver: $("setDriver").value.trim() || "Test",
+        phone: $("setPhone").value.trim() || "—",
+        vehicle: $("setVehicle").value.trim() || "—",
+        plate: $("setPlate").value.trim() || "—",
+        km: 123456, fuel:"1/2", state:"OK",
+        fixedDue: Number($("setDailyFixed").value||0)||15000,
+        fixedPaid: Number($("setDailyFixed").value||0)||15000,
+        payMode:"Orange Money", txn:"TXNTEST",
+        note:"Test partage"
+      };
+      await shareSummary(fake);
+    });
+
+    // =========================
+    // Reset
+    // =========================
+    $("btnReset").addEventListener("click", ()=>{
+      const ok = confirm("Reset total ? (réglages + historique)");
+      if(!ok) return;
+      resetAll();
+      toast("Reset fait");
+      fillPills();
+      renderKpis();
+      renderHistory();
+      $("lastExport").textContent = "—";
+    });
+
+    // =========================
+    // Nav shortcuts
+    // =========================
+    $("goCheckin").addEventListener("click", ()=> showTab("tabCheckin"));
+    $("goCheckout").addEventListener("click", ()=> showTab("tabCheckout"));
+    $("btnCancelIncident").addEventListener("click", ()=> showTab("tabHome"));
+
+    // =========================
+    // Init
+    // =========================
+    function init(){
+      updateNet();
+      prefillDateTime();
+      fillPills();
+      renderKpis();
+
+      const lastExport = localStorage.getItem("fgs_last_export");
+      $("lastExport").textContent = lastExport ? new Date(lastExport).toLocaleString() : "—";
+
+      // Service worker
+      if("serviceWorker" in navigator){
+        navigator.serviceWorker.register("./sw.js").catch(()=>{});
+      }
+    }
+    init();
+
+    // =========================
+    // PWA install prompt
+    // =========================
+    let deferredPrompt = null;
+    window.addEventListener("beforeinstallprompt", (e)=>{
+      e.preventDefault();
+      deferredPrompt = e;
+      $("btnInstall").disabled = false;
+    });
+    $("btnInstall").addEventListener("click", async ()=>{
+      if(!deferredPrompt){ toast("Installation non dispo ici"); return; }
+      deferredPrompt.prompt();
+      const res = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      $("btnInstall").disabled = true;
+      toast(res.outcome === "accepted" ? "Installé" : "Installation annulée");
+    });
+  </script>
+</body>
+</html>
