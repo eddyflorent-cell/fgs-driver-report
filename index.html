@@ -181,6 +181,19 @@
           <button class="primary" id="goCheckin">Faire un Check-in</button>
           <button class="primary" id="goCheckout">Faire un Check-out</button>
         </div>
+<div class="divider"></div>
+
+<div class="item hide" id="pendingBox">
+  <div class="meta">
+    <span class="badge b-out">EXPORT PRÊT</span>
+    <span class="pill" style="margin-left:8px;">À envoyer à Wendy</span>
+  </div>
+  <div class="muted" id="pendingInfo" style="margin-top:6px;"></div>
+  <div class="row cols2" style="margin-top:10px;">
+    <button class="primary" id="btnSharePending">Partager maintenant</button>
+    <button class="danger" id="btnDeletePending">Supprimer</button>
+  </div>
+</div>
 
         <p class="footer">Astuce terrain : si le réseau est faible, fais les photos, valide. Ça partira plus tard.</p>
       </div>
@@ -477,6 +490,37 @@
             <input id="setManagerPhone" type="tel" placeholder="ex: +237..." />
           </div>
         </div>
+<div class="divider"></div>
+
+<h2>Auto-export (soir)</h2>
+<p class="muted">Génère un export chaque soir. Si la PWA est ouverte, elle te proposera de partager. Sinon, elle te mettra une notif (si autorisée).</p>
+
+<div class="row cols3" style="margin-top:10px;">
+  <div class="field">
+    <label>Activer auto-export</label>
+    <select id="setAutoExport">
+      <option value="0">Non</option>
+      <option value="1">Oui</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Heure d’export</label>
+    <input id="setExportTime" type="time" />
+    <div class="note">Ex: 21:00</div>
+  </div>
+
+  <div class="field">
+    <label>Notif</label>
+    <button id="btnAskNotif">Autoriser notifications</button>
+    <div class="note">Optionnel mais utile.</div>
+  </div>
+</div>
+
+<div class="row cols2" style="margin-top:10px;">
+  <button id="btnTestAutoExport">Tester auto-export maintenant</button>
+  <button id="btnClearPending">Effacer export en attente</button>
+</div>
 
         <div class="row cols2" style="margin-top:10px;">
           <button class="primary" id="btnSaveSettings">Enregistrer réglages</button>
@@ -624,6 +668,9 @@
       $("setDailyFixed").value = s.dailyFixed ?? "";
       $("setManager").value = s.manager || "";
       $("setManagerPhone").value = s.managerPhone || "";
+      $("setAutoExport").value = s.autoExportEnabled ? "1" : "0";
+      $("setExportTime").value = s.exportTime || "21:00";
+
     }
     $("btnSaveSettings").addEventListener("click", ()=>{
       const s = {
@@ -634,11 +681,17 @@
         dailyFixed: Number($("setDailyFixed").value || 0) || 0,
         manager: $("setManager").value.trim(),
         managerPhone: $("setManagerPhone").value.trim(),
+        autoExportEnabled: $("setAutoExport").value === "1",
+        exportTime: $("setExportTime").value || "21:00",
+
         updatedAt: new Date().toISOString()
       };
       saveSettings(s);
       fillPills();
       toast("Réglages enregistrés");
+      scheduleAutoExport();
+      renderPendingBox();
+
       renderKpis();
     });
 
@@ -929,44 +982,215 @@
       $("kpiLastOut").textContent = lastOut ? `${lastOut.fixedPaid || 0} FCFA • ${lastOut.time}` : "—";
     }
 
-    // =========================
-    // Export
-    // =========================
-    function exportJSON(){
-      const s = loadSettings();
-      const recs = loadRecords();
-      const pack = { exportedAt: new Date().toISOString(), settings: s, records: recs };
-      const name = `FGS-DriverReport-${todayISO()}.json`;
-      download(name, JSON.stringify(pack, null, 2), "application/json");
-      localStorage.setItem("fgs_last_export", new Date().toISOString());
-      $("lastExport").textContent = new Date().toLocaleString();
-      toast("Export JSON généré");
-    }
-    function exportCSV(){
-      const recs = loadRecords();
-      // one CSV line per record (photos excluded)
-      const headers = ["type","date","time","driver","phone","vehicle","plate","km","fuel","state","fixedDue","fixedPaid","payMode","txn","note","incidentType","desc","createdAt","id"];
-      const lines = [headers.map(csvEscape).join(",")];
-      for(const r of recs){
-        const row = [
-          r.type, r.date, r.time, r.driver, r.phone, r.vehicle, r.plate,
-          r.km ?? "", r.fuel ?? "", r.state ?? "",
-          r.fixedDue ?? "", r.fixedPaid ?? "", r.payMode ?? "", r.txn ?? "",
-          r.note ?? "", r.incidentType ?? "", r.desc ?? "",
-          r.createdAt ?? "", r.id ?? ""
-        ];
-        lines.push(row.map(csvEscape).join(","));
-      }
-      const name = `FGS-DriverReport-${todayISO()}.csv`;
-      download(name, lines.join("\n"), "text/csv");
-      localStorage.setItem("fgs_last_export", new Date().toISOString());
-      $("lastExport").textContent = new Date().toLocaleString();
-      toast("Export CSV généré");
-    }
+ // =========================
+// Export + Auto-export
+// =========================
+const KEY_PENDING = "fgs_pending_export_v1";
 
-    $("btnExport").addEventListener("click", exportJSON);
-    $("btnExportJSON").addEventListener("click", exportJSON);
-    $("btnExportCSV").addEventListener("click", exportCSV);
+function buildExportPack(){
+  const s = loadSettings();
+  const recs = loadRecords();
+  return {
+    exportedAt: new Date().toISOString(),
+    settings: s,
+    records: recs
+  };
+}
+
+function makeExportBlob(){
+  const pack = buildExportPack();
+  const json = JSON.stringify(pack, null, 2);
+  const blob = new Blob([json], {type:"application/json"});
+  const filename = `FGS-DriverReport-${todayISO()}.json`;
+  return { blob, filename, jsonText: json, pack };
+}
+
+function setLastExportNow(){
+  localStorage.setItem("fgs_last_export", new Date().toISOString());
+  $("lastExport").textContent = new Date().toLocaleString();
+}
+
+async function shareExportBlob(blob, filename, message){
+  // best: native share with file (Android PWA souvent OK)
+  if(navigator.share){
+    try{
+      const file = new File([blob], filename, {type:"application/json"});
+      const payload = { title: "FGS Driver Report", text: message || "" };
+
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        payload.files = [file];
+      }
+      await navigator.share(payload);
+      toast("Export partagé");
+      return true;
+    }catch(e){
+      // fallback below
+    }
+  }
+  return false;
+}
+
+function savePendingExport(){
+  const { filename, pack } = makeExportBlob();
+  localStorage.setItem(KEY_PENDING, JSON.stringify({
+    createdAt: new Date().toISOString(),
+    filename,
+    count: (pack.records || []).length,
+    date: todayISO()
+  }));
+}
+
+function getPendingMeta(){
+  try { return JSON.parse(localStorage.getItem(KEY_PENDING) || "null"); }
+  catch { return null; }
+}
+function clearPending(){
+  localStorage.removeItem(KEY_PENDING);
+  renderPendingBox();
+}
+
+function renderPendingBox(){
+  const meta = getPendingMeta();
+  const box = $("pendingBox");
+  if(!box) return;
+  if(!meta){
+    box.classList.add("hide");
+    return;
+  }
+  $("pendingInfo").textContent =
+    `Créé: ${new Date(meta.createdAt).toLocaleString()} • ${meta.count} enregistrements • Fichier: ${meta.filename}`;
+  box.classList.remove("hide");
+}
+
+async function exportJSON(manual=true){
+  const { blob, filename, pack } = makeExportBlob();
+
+  // En manuel : on télécharge + met à jour le “last export”
+  if(manual){
+    download(filename, JSON.stringify(pack, null, 2), "application/json");
+    setLastExportNow();
+    toast("Export JSON généré");
+  }else{
+    // En auto : on ne force pas le download (souvent bloqué sans clic)
+    savePendingExport();
+    toast("Auto-export prêt");
+  }
+
+  return { blob, filename };
+}
+
+function exportCSV(){
+  const recs = loadRecords();
+  const headers = ["type","date","time","driver","phone","vehicle","plate","km","fuel","state","fixedDue","fixedPaid","payMode","txn","note","incidentType","desc","createdAt","id"];
+  const lines = [headers.map(csvEscape).join(",")];
+  for(const r of recs){
+    const row = [
+      r.type, r.date, r.time, r.driver, r.phone, r.vehicle, r.plate,
+      r.km ?? "", r.fuel ?? "", r.state ?? "",
+      r.fixedDue ?? "", r.fixedPaid ?? "", r.payMode ?? "", r.txn ?? "",
+      r.note ?? "", r.incidentType ?? "", r.desc ?? "",
+      r.createdAt ?? "", r.id ?? ""
+    ];
+    lines.push(row.map(csvEscape).join(","));
+  }
+  const name = `FGS-DriverReport-${todayISO()}.csv`;
+  download(name, lines.join("\n"), "text/csv");
+  setLastExportNow();
+  toast("Export CSV généré");
+}
+
+$("btnExport").addEventListener("click", ()=>exportJSON(true));
+$("btnExportJSON").addEventListener("click", ()=>exportJSON(true));
+$("btnExportCSV").addEventListener("click", exportCSV);
+
+// Boutons “pending”
+$("btnSharePending").addEventListener("click", async ()=>{
+  const { blob, filename } = makeExportBlob();
+  const s = loadSettings();
+  const msg = `FGS EXPORT ${todayISO()} — ${loadRecords().length} enregistrements.`;
+  const ok = await shareExportBlob(blob, filename, msg);
+
+  if(!ok){
+    // fallback: download + ouvrir WhatsApp texte
+    download(filename, JSON.stringify(buildExportPack(), null, 2), "application/json");
+    const manager = (s.managerPhone || "").replaceAll(" ","").replaceAll("+","");
+    const wa = manager ? `https://wa.me/${manager}?text=` : `https://wa.me/?text=`;
+    window.open(wa + encodeURIComponent(msg + "\n\n(Le fichier JSON a été téléchargé. Joins-le dans WhatsApp.)"), "_blank");
+  }
+  clearPending();
+  setLastExportNow();
+});
+
+$("btnDeletePending").addEventListener("click", ()=>{
+  clearPending();
+  toast("Export en attente supprimé");
+});
+
+// =========================
+// Auto-export scheduler
+// =========================
+function msUntilNextTime(timeStr){
+  // timeStr: "21:00"
+  const [hh, mm] = (timeStr || "21:00").split(":").map(x=>parseInt(x,10));
+  const now = new Date();
+  const next = new Date(now);
+  next.setHours(Number.isFinite(hh)?hh:21, Number.isFinite(mm)?mm:0, 0, 0);
+  if(next <= now) next.setDate(next.getDate() + 1);
+  return next - now;
+}
+
+let autoTimer = null;
+
+async function runAutoExport(){
+  await exportJSON(false);
+  renderPendingBox();
+
+  // Si l’app est visible → propose de partager en 1 tap
+  if(document.visibilityState === "visible"){
+    const ok = confirm("FGS : Auto-export prêt. Voulez-vous le partager maintenant à Wendy ?");
+    if(ok) $("btnSharePending").click();
+  }else{
+    // Sinon notif (si autorisée)
+    if("Notification" in window && Notification.permission === "granted"){
+      const n = new Notification("FGS Driver Report", { body: "Auto-export prêt à envoyer à Wendy." });
+      n.onclick = () => {
+        // Ouvre l’app (selon OS) + l’utilisateur partage en 1 tap
+        n.close();
+      };
+    }
+  }
+
+  scheduleAutoExport(); // re-planifie pour demain
+}
+
+function scheduleAutoExport(){
+  if(autoTimer) clearTimeout(autoTimer);
+  const s = loadSettings();
+  if(!s.autoExportEnabled) return;
+
+  const t = s.exportTime || "21:00";
+  const ms = msUntilNextTime(t);
+  autoTimer = setTimeout(runAutoExport, ms);
+}
+
+document.addEventListener("visibilitychange", ()=>{
+  // Si l’utilisateur rouvre l’app et qu’un export attend → on l’affiche
+  if(document.visibilityState === "visible") renderPendingBox();
+});
+
+// Boutons + réglages
+$("btnAskNotif").addEventListener("click", async ()=>{
+  if(!("Notification" in window)){ toast("Notifications non supportées"); return; }
+  const p = await Notification.requestPermission();
+  toast(p === "granted" ? "Notifications OK" : "Notifications refusées");
+});
+
+$("btnTestAutoExport").addEventListener("click", async ()=>{
+  await runAutoExport();
+});
+
+$("btnClearPending").addEventListener("click", clearPending);
+
 
     // =========================
     // Share
@@ -1092,6 +1316,9 @@
       }
     }
     init();
+    renderPendingBox();
+    scheduleAutoExport();
+
 
     // =========================
     // PWA install prompt
