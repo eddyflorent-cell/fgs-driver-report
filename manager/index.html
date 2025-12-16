@@ -309,11 +309,11 @@ function setInstallBtnState() {
     return;
   }
 
- // Android: on laisse le bouton cliquable même si le prompt n'existe pas
-    btn.disabled = false;
-    btn.textContent = deferredPrompt ? "Installer" : "Installer (menu ⋮)";
-
+  // Android: on laisse TOUJOURS cliquable
+  btn.disabled = false;
+  btn.textContent = deferredPrompt ? "Installer" : "Installer (menu ⋮)";
 }
+
 
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
