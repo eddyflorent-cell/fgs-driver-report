@@ -65,6 +65,7 @@
         </div>
       </div>
       <div class="actions">
+        <button class="primary" id="btnInstall" disabled>Installer</button>
         <button class="primary" id="btnImport">Importer un report</button>
         <button id="btnExportArchive">Exporter archive (JSON)</button>
         <button class="danger" id="btnWipe">Tout effacer</button>
@@ -274,6 +275,26 @@
       $(id).addEventListener("input", render);
       $(id).addEventListener("change", render);
     });
+// Service worker
+    if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").catch(()=>{});
+}
+
+let deferredPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById("btnInstall");
+  if (btn) btn.disabled = false;
+});
+
+document.getElementById("btnInstall")?.addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById("btnInstall").disabled = true;
+});
 
     render();
   </script>
