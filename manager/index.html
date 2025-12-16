@@ -1,59 +1,152 @@
 <!doctype html>
 <html lang="fr">
 <head>
+  <meta charset="utf-8" />
   <link rel="manifest" href="./manifest.webmanifest" />
 <meta name="theme-color" content="#ffffff" />
 <link rel="apple-touch-icon" href="./icon-192.png" />
-
-
-  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FGS Driver Manager</title>
 
   <style>
-    :root{
-      --bg:#0b0c0f; --card:#12141a; --muted:#9aa3b2; --text:#e9edf5;
-      --line:#23283a; --accent:#4992db; --danger:#ec4f21; --ok:#9ece09; --warn:#f49a1e;
-      --radius:16px;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#0b0c0f,#07080a);color:var(--text)}
-    .wrap{max-width:1100px;margin:0 auto;padding:16px}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px;border:1px solid var(--line);border-radius:var(--radius);background:rgba(18,20,26,.85);position:sticky;top:12px;z-index:10}
-    .brand{display:flex;align-items:center;gap:10px}
-    .logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#1b2d7a);display:grid;place-items:center;font-weight:900}
-    h1{font-size:14px;margin:0}
-    .sub{font-size:12px;color:var(--muted)}
-    .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-    button{border:1px solid var(--line);background:#0f1117;color:var(--text);border-radius:12px;padding:10px 12px;cursor:pointer;font-weight:700}
-    button.primary{border-color:rgba(73,146,219,.6); background:rgba(73,146,219,.12)}
-    button.danger{border-color:rgba(236,79,33,.6); background:rgba(236,79,33,.12)}
-    .grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
-    @media(min-width:950px){.grid{grid-template-columns:1fr 1fr}}
-    .card{border:1px solid var(--line);background:rgba(18,20,26,.85);border-radius:var(--radius);padding:14px}
-    h2{margin:0 0 8px 0;font-size:16px}
-    .muted{color:var(--muted);font-size:12px;margin:0}
-    label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
-    input,select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#0f1117;color:var(--text);font:inherit}
-    .list{display:grid;gap:10px;margin-top:10px}
-    .item{border:1px solid var(--line);border-radius:14px;padding:12px;background:#0f1117}
-    .meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--muted);font-size:12px}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:#0f1117;font-size:12px;color:var(--muted)}
-    .pill b{color:var(--text)}
-    .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:900;border:1px solid var(--line)}
-    .b-in{color:#b7d2ff;border-color:rgba(73,146,219,.4);background:rgba(73,146,219,.08)}
-    .b-out{color:#d7ffd1;border-color:rgba(158,206,9,.35);background:rgba(158,206,9,.08)}
-    .b-incident{color:#ffd2c8;border-color:rgba(236,79,33,.4);background:rgba(236,79,33,.08)}
-    .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    .thumbs img{width:86px;height:86px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
-    .divider{height:1px;background:var(--line);margin:12px 0}
-    .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#0f1117;border:1px solid var(--line);padding:10px 12px;border-radius:14px;display:none}
-    .toast.show{display:block}
-    .kpi{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
-    .kpi .box{border:1px solid var(--line);background:#0f1117;border-radius:14px;padding:12px}
-    .k{color:var(--muted);font-size:12px}
-    .v{font-weight:900;font-size:18px}
-  </style>
+  :root{
+    --bg:#f6f7fb;
+    --card:#ffffff;
+    --muted:#5c677a;
+    --text:#101828;
+    --line:#d9dee8;
+
+    /* Manager = orange */
+    --accent:#ec4f21;
+    --accent2:#f49a1e;
+
+    --danger:#ec4f21;
+    --ok:#9ece09;
+    --warn:#f49a1e;
+    --radius:16px;
+    --surface:#ffffff;
+    --surface2:#f1f4f9;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:linear-gradient(180deg,#ffffff,var(--bg));
+    color:var(--text);
+  }
+
+  .wrap{max-width:1100px;margin:0 auto;padding:16px}
+
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:14px;border:1px solid var(--line);border-radius:var(--radius);
+    background:rgba(255,255,255,.92);
+    backdrop-filter: blur(6px);
+    position:sticky;top:12px;z-index:10;
+    box-shadow:0 10px 30px rgba(16,24,40,.08);
+  }
+
+  .brand{display:flex;align-items:center;gap:10px}
+  .logo{
+    width:36px;height:36px;border-radius:12px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:grid;place-items:center;font-weight:900;color:#fff;
+    box-shadow:0 10px 30px rgba(236,79,33,.18);
+  }
+  h1{font-size:14px;margin:0}
+  .sub{font-size:12px;color:var(--muted)}
+
+  .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+  .hint{font-size:12px;color:var(--muted);max-width:260px;line-height:1.2}
+
+  button{
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--text);
+    border-radius:12px;
+    padding:10px 12px;
+    cursor:pointer;
+    font-weight:800;
+  }
+  button.primary{
+    border-color:rgba(236,79,33,.45);
+    background:rgba(236,79,33,.10);
+  }
+  button.danger{
+    border-color:rgba(236,79,33,.55);
+    background:rgba(236,79,33,.14);
+  }
+  button:disabled{opacity:.55;cursor:not-allowed}
+
+  .grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+  @media(min-width:950px){.grid{grid-template-columns:1fr 1fr}}
+
+  .card{
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.92);
+    border-radius:var(--radius);
+    padding:14px;
+    box-shadow:0 10px 30px rgba(16,24,40,.06);
+  }
+
+  h2{margin:0 0 8px 0;font-size:16px}
+  .muted{color:var(--muted);font-size:12px;margin:0}
+  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
+
+  input,select{
+    width:100%;
+    padding:11px 12px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--text);
+    font:inherit;
+  }
+
+  .list{display:grid;gap:10px;margin-top:10px}
+  .item{
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px;
+    background:var(--surface);
+  }
+  .meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--muted);font-size:12px}
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:6px 10px;border-radius:999px;
+    border:1px solid var(--line);
+    background:var(--surface2);
+    font-size:12px;color:var(--muted)
+  }
+  .pill b{color:var(--text)}
+  .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:900;border:1px solid var(--line)}
+  .b-in{color:#1b4f9e;border-color:rgba(73,146,219,.35);background:rgba(73,146,219,.10)}
+  .b-out{color:#2b6a1e;border-color:rgba(158,206,9,.28);background:rgba(158,206,9,.10)}
+  .b-incident{color:#a12b14;border-color:rgba(236,79,33,.35);background:rgba(236,79,33,.10)}
+
+  .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .thumbs img{width:86px;height:86px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+
+  .divider{height:1px;background:var(--line);margin:12px 0}
+
+  .toast{
+    position:fixed;left:50%;bottom:20px;transform:translateX(-50%);
+    background:var(--surface);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:10px 12px;border-radius:14px;max-width:92vw;z-index:99;
+    box-shadow:0 10px 30px rgba(16,24,40,.14);
+    display:none;
+  }
+  .toast.show{display:block}
+
+  .kpi{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+  .kpi .box{border:1px solid var(--line);background:var(--surface2);border-radius:14px;padding:12px}
+  .k{color:var(--muted);font-size:12px}
+  .v{font-weight:900;font-size:18px}
+</style>
+
 </head>
 <body>
   <div class="wrap">
@@ -66,7 +159,8 @@
         </div>
       </div>
       <div class="actions">
-        <button class="primary" id="btnInstall" disabled>Installer</button>
+        <button class="primary" id="btnInstall">Installer</button>
+<span class="hint" id="installHint"></span>
         <button class="primary" id="btnImport">Importer un report</button>
         <button id="btnExportArchive">Exporter archive (JSON)</button>
         <button class="danger" id="btnWipe">Tout effacer</button>
@@ -294,24 +388,27 @@ function isIOS() {
 
 function setInstallBtnState() {
   const btn = document.getElementById("btnInstall");
+  const hint = document.getElementById("installHint");
   if (!btn) return;
+
+  // Toujours cliquable (sinon ça donne un bouton "mort" sur mobile)
+  btn.disabled = false;
+  btn.textContent = "Installer";
 
   if (isStandalone()) {
     btn.disabled = true;
     btn.textContent = "Installée";
+    if (hint) hint.textContent = "";
     return;
   }
 
-  // iOS: pas de beforeinstallprompt
   if (isIOS()) {
-    btn.disabled = false;
-    btn.textContent = "Installer (iPhone)";
+    if (hint) hint.textContent = "iPhone : Partager → Ajouter à l’écran d’accueil";
     return;
   }
 
-  // Android: on laisse TOUJOURS cliquable
-  btn.disabled = false;
-  btn.textContent = deferredPrompt ? "Installer" : "Installer (menu ⋮)";
+  // Android : si prompt dispo → clic = prompt. Sinon → on guide vers menu ⋮
+  if (hint) hint.textContent = deferredPrompt ? "" : "Android : menu ⋮ → Installer l’application";
 }
 
 
