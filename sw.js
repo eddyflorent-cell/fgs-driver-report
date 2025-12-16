@@ -1,4 +1,5 @@
-const CACHE = "fgs-driver-report-v1";
+const CACHE = "fgs-driver-report-v2";
+
 const ASSETS = [
   "./",
   "./index.html",
