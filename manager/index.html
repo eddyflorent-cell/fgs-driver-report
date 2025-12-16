@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <link rel="manifest" href="./manifest.webmanifest" />
+<meta name="theme-color" content="#ffffff" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FGS Driver Manager</title>
+
+  <style>
+    :root{
+      --bg:#0b0c0f; --card:#12141a; --muted:#9aa3b2; --text:#e9edf5;
+      --line:#23283a; --accent:#4992db; --danger:#ec4f21; --ok:#9ece09; --warn:#f49a1e;
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#0b0c0f,#07080a);color:var(--text)}
+    .wrap{max-width:1100px;margin:0 auto;padding:16px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px;border:1px solid var(--line);border-radius:var(--radius);background:rgba(18,20,26,.85);position:sticky;top:12px;z-index:10}
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#1b2d7a);display:grid;place-items:center;font-weight:900}
+    h1{font-size:14px;margin:0}
+    .sub{font-size:12px;color:var(--muted)}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    button{border:1px solid var(--line);background:#0f1117;color:var(--text);border-radius:12px;padding:10px 12px;cursor:pointer;font-weight:700}
+    button.primary{border-color:rgba(73,146,219,.6); background:rgba(73,146,219,.12)}
+    button.danger{border-color:rgba(236,79,33,.6); background:rgba(236,79,33,.12)}
+    .grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+    @media(min-width:950px){.grid{grid-template-columns:1fr 1fr}}
+    .card{border:1px solid var(--line);background:rgba(18,20,26,.85);border-radius:var(--radius);padding:14px}
+    h2{margin:0 0 8px 0;font-size:16px}
+    .muted{color:var(--muted);font-size:12px;margin:0}
+    label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
+    input,select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#0f1117;color:var(--text);font:inherit}
+    .list{display:grid;gap:10px;margin-top:10px}
+    .item{border:1px solid var(--line);border-radius:14px;padding:12px;background:#0f1117}
+    .meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--muted);font-size:12px}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:#0f1117;font-size:12px;color:var(--muted)}
+    .pill b{color:var(--text)}
+    .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:900;border:1px solid var(--line)}
+    .b-in{color:#b7d2ff;border-color:rgba(73,146,219,.4);background:rgba(73,146,219,.08)}
+    .b-out{color:#d7ffd1;border-color:rgba(158,206,9,.35);background:rgba(158,206,9,.08)}
+    .b-incident{color:#ffd2c8;border-color:rgba(236,79,33,.4);background:rgba(236,79,33,.08)}
+    .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .thumbs img{width:86px;height:86px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+    .divider{height:1px;background:var(--line);margin:12px 0}
+    .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#0f1117;border:1px solid var(--line);padding:10px 12px;border-radius:14px;display:none}
+    .toast.show{display:block}
+    .kpi{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+    .kpi .box{border:1px solid var(--line);background:#0f1117;border-radius:14px;padding:12px}
+    .k{color:var(--muted);font-size:12px}
+    .v{font-weight:900;font-size:18px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">FGS</div>
+        <div>
+          <h1>FGS Driver Manager</h1>
+          <div class="sub">Importer • Archiver • Contrôler (offline)</div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="primary" id="btnInstall" disabled>Installer</button>
+        <button class="primary" id="btnImport">Importer un report</button>
+        <button id="btnExportArchive">Exporter archive (JSON)</button>
+        <button class="danger" id="btnWipe">Tout effacer</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Import</h2>
+        <p class="muted">Wendy reçoit un fichier JSON via WhatsApp → elle le télécharge → puis l’importe ici.</p>
+        <label>Fichier report (.json)</label>
+        <input id="fileInput" type="file" accept="application/json,.json" />
+
+        <div class="divider"></div>
+
+        <h2>Filtres</h2>
+        <label>Date</label>
+        <input id="fDate" type="date" />
+        <label>Chauffeur (contient)</label>
+        <input id="fDriver" type="text" placeholder="ex: Jean" />
+        <label>Type</label>
+        <select id="fType">
+          <option value="">Tous</option>
+          <option value="checkin">Check-in</option>
+          <option value="checkout">Check-out</option>
+          <option value="incident">Incident</option>
+        </select>
+
+        <div class="divider"></div>
+
+        <div class="kpi">
+          <div class="box"><div class="k">Reports archivés</div><div class="v" id="kpiReports">0</div></div>
+          <div class="box"><div class="k">Événements</div><div class="v" id="kpiEvents">0</div></div>
+          <div class="box"><div class="k">Dernier import</div><div class="v" id="kpiLast">—</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Archive</h2>
+        <p class="muted">Chaque import garde : réglages chauffeur + événements + photos.</p>
+        <div class="list" id="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const $ = (id)=>document.getElementById(id);
+    const KEY = "fgs_manager_archive_v1"; // stores array of packs
+    const toastEl = $("toast");
+
+    function toast(msg){
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      clearTimeout(toastEl._t);
+      toastEl._t = setTimeout(()=>toastEl.classList.remove("show"), 2200);
+    }
+    function loadArchive(){
+      try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; }
+    }
+    function saveArchive(arr){
+      localStorage.setItem(KEY, JSON.stringify(arr));
+    }
+    function escapeHtml(s){
+      return String(s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    }
+    function badge(type){
+      if(type==="checkin") return `<span class="badge b-in">CHECK-IN</span>`;
+      if(type==="checkout") return `<span class="badge b-out">CHECK-OUT</span>`;
+      return `<span class="badge b-incident">INCIDENT</span>`;
+    }
+
+    function computeKpis(){
+      const packs = loadArchive();
+      const events = packs.reduce((n,p)=>n+(p.records?.length||0),0);
+      $("kpiReports").textContent = packs.length;
+      $("kpiEvents").textContent = events;
+      const last = packs[0]?.importedAt ? new Date(packs[0].importedAt).toLocaleString() : "—";
+      $("kpiLast").textContent = last;
+    }
+
+    function applyFilters(packs){
+      const d = $("fDate").value;
+      const drv = $("fDriver").value.trim().toLowerCase();
+      const t = $("fType").value;
+
+      // flatten events with pack context
+      const rows = [];
+      for(const p of packs){
+        const settings = p.settings || {};
+        const recs = p.records || [];
+        for(const r of recs){
+          rows.push({ pack:p, settings, r });
+        }
+      }
+
+      return rows.filter(x=>{
+        if(d && x.r.date !== d) return false;
+        if(t && x.r.type !== t) return false;
+        if(drv){
+          const name = (x.r.driver || x.settings.driver || "").toLowerCase();
+          if(!name.includes(drv)) return false;
+        }
+        return true;
+      });
+    }
+
+    function render(){
+      const packs = loadArchive();
+      computeKpis();
+      const list = $("list");
+      list.innerHTML = "";
+
+      const rows = applyFilters(packs);
+      if(rows.length === 0){
+        list.innerHTML = `<div class="item"><div class="muted">Aucun élément.</div></div>`;
+        return;
+      }
+
+      for(const x of rows.slice(0, 120)){ // limit UI
+        const r = x.r;
+        const s = x.settings || {};
+        const veh = [r.vehicle||s.vehicle, r.plate||s.plate].filter(Boolean).join(" • ");
+        const title = `${badge(r.type)} <span class="pill" style="margin-left:8px;">${r.date} • ${r.time}</span>`;
+        const kmLine = r.type==="incident" ? "" : `<div class="meta"><span>KM: <b>${r.km}</b></span> <span>Carburant: <b>${r.fuel}</b></span></div>`;
+        const fixedLine = r.type==="checkout"
+          ? `<div class="meta"><span>Fixe dû: <b>${r.fixedDue}</b></span> <span>Versé: <b>${r.fixedPaid}</b></span> <span>${r.payMode||""}</span></div>`
+          : "";
+        const note = r.type==="incident"
+          ? `<div class="muted" style="margin-top:6px;white-space:pre-wrap;">${escapeHtml(r.desc)}</div>`
+          : (r.note ? `<div class="muted" style="margin-top:6px;white-space:pre-wrap;">${escapeHtml(r.note)}</div>` : "");
+
+        const thumbs = [];
+        if(r.photos?.odometer) thumbs.push(r.photos.odometer);
+        if(r.photos?.fuel) thumbs.push(r.photos.fuel);
+        if(r.photos?.proof) thumbs.push(r.photos.proof);
+        if(r.photos?.photo) thumbs.push(r.photos.photo);
+        const imgs = thumbs.length ? `<div class="thumbs">${thumbs.map(src=>`<img src="${src}" alt="photo">`).join("")}</div>` : "";
+
+        const item = document.createElement("div");
+        item.className = "item";
+        item.innerHTML = `
+          <div class="meta">${title}</div>
+          <div class="meta" style="margin-top:6px;">
+            <span>Chauffeur: <b>${escapeHtml(r.driver||s.driver||"—")}</b></span>
+            <span>Véhicule: <b>${escapeHtml(veh||"—")}</b></span>
+          </div>
+          ${kmLine}
+          ${fixedLine}
+          ${note}
+          ${imgs}
+        `;
+        list.appendChild(item);
+      }
+    }
+
+    async function importPackFromFile(file){
+      const text = await file.text();
+      let pack;
+      try { pack = JSON.parse(text); } catch { toast("JSON invalide"); return; }
+      if(!pack || !Array.isArray(pack.records)){ toast("Format report non reconnu"); return; }
+
+      // Normalize + stamp
+      pack.importedAt = new Date().toISOString();
+      pack.sourceFilename = file.name || "report.json";
+
+      const archive = loadArchive();
+      archive.unshift(pack);
+      saveArchive(archive);
+
+      toast("Report importé");
+      render();
+    }
+
+    $("fileInput").addEventListener("change", async (e)=>{
+      const f = e.target.files?.[0];
+      if(!f) return;
+      await importPackFromFile(f);
+      $("fileInput").value = "";
+    });
+
+    $("btnImport").addEventListener("click", ()=> $("fileInput").click());
+
+    $("btnExportArchive").addEventListener("click", ()=>{
+      const archive = loadArchive();
+      const blob = new Blob([JSON.stringify({ exportedAt:new Date().toISOString(), archive }, null, 2)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `FGS-Manager-Archive-${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 400);
+      toast("Archive exportée");
+    });
+
+    $("btnWipe").addEventListener("click", ()=>{
+      if(!confirm("Tout effacer (archive) ?")) return;
+      localStorage.removeItem(KEY);
+      toast("Archive effacée");
+      render();
+    });
+
+    ["fDate","fDriver","fType"].forEach(id=>{
+      $(id).addEventListener("input", render);
+      $(id).addEventListener("change", render);
+    });
+// Service worker
+    if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").catch(()=>{});
+}
+
+// --- PWA Install (Android Chrome) + fallback iPhone ---
+let deferredPrompt = null;
+
+function isStandalone() {
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+
+function isIOS() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+
+function setInstallBtnState() {
+  const btn = document.getElementById("btnInstall");
+  if (!btn) return;
+
+  if (isStandalone()) {
+    btn.disabled = true;
+    btn.textContent = "Installée";
+    return;
+  }
+
+  // iOS: pas de beforeinstallprompt
+  if (isIOS()) {
+    btn.disabled = false;
+    btn.textContent = "Installer (iPhone)";
+    return;
+  }
+
+ // Android: on laisse le bouton cliquable même si le prompt n'existe pas
+    btn.disabled = false;
+    btn.textContent = deferredPrompt ? "Installer" : "Installer (menu ⋮)";
+
+}
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  setInstallBtnState();
+});
+
+document.getElementById("btnInstall")?.addEventListener("click", async () => {
+  // iPhone: expliquer le geste
+  if (isIOS()) {
+    alert("Sur iPhone : Safari → Partager → Ajouter à l’écran d’accueil.");
+    return;
+  }
+
+  // Android: si pas de prompt, expliquer au lieu de rien faire
+  if (!deferredPrompt) {
+    alert("Pas installable pour l’instant.\nEssaye : menu ⋮ de Chrome → « Installer l’application ».\nSi absent : vérifie manifest + icônes + SW, et ouvre dans Chrome (pas WhatsApp).");
+    return;
+  }
+
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  setInstallBtnState();
+});
+
+// au chargement
+setInstallBtnState();
+window.addEventListener("appinstalled", () => {
+  deferredPrompt = null;
+  setInstallBtnState();
+});
+
+  </script>
+</body>
+</html>
