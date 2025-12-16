@@ -281,23 +281,71 @@
   navigator.serviceWorker.register("./sw.js").catch(()=>{});
 }
 
+// --- PWA Install (Android Chrome) + fallback iPhone ---
 let deferredPrompt = null;
+
+function isStandalone() {
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+
+function isIOS() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+
+function setInstallBtnState() {
+  const btn = document.getElementById("btnInstall");
+  if (!btn) return;
+
+  if (isStandalone()) {
+    btn.disabled = true;
+    btn.textContent = "Installée";
+    return;
+  }
+
+  // iOS: pas de beforeinstallprompt
+  if (isIOS()) {
+    btn.disabled = false;
+    btn.textContent = "Installer (iPhone)";
+    return;
+  }
+
+  // Android: activé seulement si beforeinstallprompt a été reçu
+  btn.disabled = !deferredPrompt;
+  btn.textContent = deferredPrompt ? "Installer" : "Installer (menu ⋮)";
+}
+
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  const btn = document.getElementById("btnInstall");
-  if (btn) btn.disabled = false;
+  setInstallBtnState();
 });
 
 document.getElementById("btnInstall")?.addEventListener("click", async () => {
-  if (!deferredPrompt) return;
+  // iPhone: expliquer le geste
+  if (isIOS()) {
+    alert("Sur iPhone : Safari → Partager → Ajouter à l’écran d’accueil.");
+    return;
+  }
+
+  // Android: si pas de prompt, expliquer au lieu de rien faire
+  if (!deferredPrompt) {
+    alert("Pas installable pour l’instant.\nEssaye : menu ⋮ de Chrome → « Installer l’application ».\nSi absent : vérifie manifest + icônes + SW, et ouvre dans Chrome (pas WhatsApp).");
+    return;
+  }
+
   deferredPrompt.prompt();
   await deferredPrompt.userChoice;
   deferredPrompt = null;
-  document.getElementById("btnInstall").disabled = true;
+  setInstallBtnState();
 });
 
-    render();
+// au chargement
+setInstallBtnState();
+window.addEventListener("appinstalled", () => {
+  deferredPrompt = null;
+  setInstallBtnState();
+});
+
   </script>
 </body>
 </html>
