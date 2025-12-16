@@ -1,4 +1,4 @@
-const CACHE = "fgs-manager-v1";
+const CACHE = "fgs-manager-v2";
 const ASSETS = [
   "./",
   "./index.html",
