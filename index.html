@@ -185,6 +185,15 @@
     background:var(--surface);
   }
   details summary{cursor:pointer;font-weight:900}
+
+  .tutorial details{border:1px solid var(--line); border-radius:12px; background:var(--card); margin:10px 0; overflow:hidden}
+  .tutorial summary{cursor:pointer; list-style:none; padding:12px 12px; font-weight:800}
+  .tutorial summary::-webkit-details-marker{display:none}
+  .tutorial .tBody{padding:0 12px 12px 12px; color:var(--text)}
+  .tutorial ol{margin:8px 0 0 18px; color:var(--text)}
+  .tutorial li{margin:6px 0}
+  .tutorial .mini{margin-top:8px; padding:10px; background:var(--surface2); border:1px solid var(--line); border-radius:12px; color:var(--muted)}
+  .tutorial .tip{padding:10px 12px; border:1px solid rgba(158,206,9,.35); background:rgba(158,206,9,.12); border-radius:12px; margin-bottom:10px}
 </style>
 
 </head>
@@ -219,6 +228,14 @@
     <div class="grid">
       <!-- LEFT -->
       <div class="card" id="tabHome">
+  <div class="notice" id="firstRunBanner" style="display:none; margin-bottom:12px;">
+    <b>Première utilisation :</b> va dans <b>Réglages</b> pour saisir tes infos (chauffeur + véhicule) et ajouter tes documents.
+    <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="primary" id="btnGoSettingsFromHome">Aller aux Réglages</button>
+      
+    </div>
+  </div>
+
         <h2>Tableau rapide</h2>
         <p class="muted">But : capturer le minimum anti-fraude (km + carburant + preuve versement). Tout se stocke sur le téléphone et se synchronise quand il y a du réseau.</p>
         <div class="divider"></div>
@@ -290,93 +307,120 @@
         <p class="note">Sans serveur, “sync” = export/partage vers Wendy (WhatsApp, email, cloud…). Quand tu voudras, on branchera un back-office.</p>
       </div>
 <div class="card hide" id="tabTutorial">
-  <h2>Tutoriel Chauffeur</h2>
-  <p class="muted">But : éviter les discussions. On prouve la journée avec km + carburant + versement fixe + photos.</p>
-
-  <div class="divider"></div>
-
-  <h3>1) Réglages (à faire 1 seule fois)</h3>
-  <ol style="margin:8px 0 0 18px; color: var(--muted);">
-    <li>Va dans <b>Réglages</b>.</li>
-    <li>Remplis : <b>Nom</b>, <b>Téléphone</b>, <b>Véhicule</b>, <b>Immat</b>, <b>Fixe/jour</b>.</li>
-    <li>Appuie sur <b>Enregistrer réglages</b>.</li>
-  </ol>
-
-  <div class="divider"></div>
-
-  <h3>2) Check-in (matin) — obligatoire</h3>
-  <ol style="margin:8px 0 0 18px; color: var(--muted);">
-    <li>Ouvre l’onglet <b>Check-in</b>.</li>
-    <li>Renseigne : <b>KM départ</b> + <b>Carburant départ</b>.</li>
-    <li>Prends les 2 photos : <b>Compteur</b> + <b>Jauge</b>.</li>
-    <li>Appuie sur <b>Enregistrer Check-in</b>.</li>
-  </ol>
-  <p class="muted" style="margin-top:10px;">
-    Astuce : si tu es offline, tu peux quand même enregistrer. Ça reste sur le téléphone.
+  <h2>Tutoriel (chauffeur)</h2>
+  <p class="muted">
+    Ce guide t’explique <b>pas à pas</b> comment utiliser l’app <b>FGS Driver Report</b>.
+    Pas besoin d’être “bon en téléphone” : tu suis les étapes, et c’est bon.
   </p>
 
   <div class="divider"></div>
 
-  <h3>3) Check-out (soir) — obligatoire</h3>
-  <ol style="margin:8px 0 0 18px; color: var(--muted);">
-    <li>Ouvre l’onglet <b>Check-out</b>.</li>
-    <li>Renseigne : <b>KM retour</b> + <b>Carburant retour</b>.</li>
-    <li>Renseigne : <b>Fixe dû</b> + <b>Fixe versé</b> + <b>Mode</b>.</li>
-    <li>Si OM/MoMo : mets la <b>référence</b> (et ajoute la <b>capture</b> si possible).</li>
-    <li>Prends les 2 photos : <b>Compteur</b> + <b>Jauge</b>.</li>
-    <li>Appuie sur <b>Enregistrer Check-out</b>.</li>
-  </ol>
+  <div class="tutorial">
+    <div class="tip">
+      <b>Règle d’or :</b> chaque jour = <b>Check-in</b> le matin + <b>Check-out</b> le soir + <b>Export JSON</b> envoyé au manager.
+    </div>
 
-  <div class="divider"></div>
+    <details open>
+      <summary>0) Avant de commencer (1 seule fois)</summary>
+      <div class="tBody">
+        <ol>
+          <li>Appuie sur l’onglet <b>Réglages</b>.</li>
+          <li>Remplis <b>Nom chauffeur</b>, <b>Téléphone</b>, <b>Véhicule</b>, <b>Immatriculation</b>, <b>Fixe/jour</b>.</li>
+          <li>Remplis aussi le <b>Manager</b> (nom + téléphone).</li>
+          <li>Appuie sur <b>Enregistrer réglages</b>.</li>
+        </ol>
+        <div class="mini">
+          ✅ Si tu changes de téléphone : il faudra refaire Réglages + Documents (car tout est stocké sur le téléphone).
+        </div>
+      </div>
+    </details>
 
-  <h3>4) Incident (si problème)</h3>
-  <ol style="margin:8px 0 0 18px; color: var(--muted);">
-    <li>Ouvre l’onglet <b>Incident</b>.</li>
-    <li>Décris clairement ce qui s’est passé (où / quand / quoi).</li>
-    <li>Ajoute une photo si possible.</li>
-    <li>Enregistre.</li>
-  </ol>
+    <details>
+      <summary>1) Documents (1 seule fois)</summary>
+      <div class="tBody">
+        <p class="muted">Dans <b>Réglages</b> → section <b>Documents</b>. Tu mets le numéro + 1 photo claire.</p>
+        <ol>
+          <li><b>Contrat de prestation</b> : numéro + photo.</li>
+          <li><b>Assurance</b> : numéro/police + photo.</li>
+          <li><b>Carte grise</b> : numéro + photo.</li>
+          <li><b>Carte d’identité (CNI)</b> : numéro + photo.</li>
+          <li>Appuie sur <b>Enregistrer documents</b>.</li>
+        </ol>
+        <div class="mini">
+          📸 Astuce photo : prends la photo à plat, bien éclairée, sans reflet. On doit lire le numéro.
+        </div>
+      </div>
+    </details>
 
-  <div class="divider"></div>
+    <details>
+      <summary>2) Check-in (matin) — obligatoire</summary>
+      <div class="tBody">
+        <ol>
+          <li>Va dans l’onglet <b>Check-in</b>.</li>
+          <li>Entre <b>KM départ</b> et <b>Carburant départ</b>.</li>
+          <li>Prends les photos demandées (ex : <b>compteur</b> + <b>jauge</b>).</li>
+          <li>(Option) Appuie sur <b>📍 Prendre la position</b> si on te le demande.</li>
+          <li>Appuie sur <b>Enregistrer Check-in</b>.</li>
+        </ol>
+        <div class="mini">
+          ✅ Si tu n’as pas internet, ce n’est pas grave : tout est gardé sur le téléphone.
+        </div>
+      </div>
+    </details>
 
-  <h3>5) Envoyer à Wendy</h3>
-  <p class="muted" style="margin:8px 0 0 0;">
-    Dans <b>Accueil</b> ou <b>Historique</b> :
-  </p>
-  <ul style="margin:8px 0 0 18px; color: var(--muted);">
-    <li>Appuie sur <b>Partager dernier résumé</b> (rapide), ou</li>
-    <li>Ouvre <b>Historique</b> → <b>Partager résumé</b> sur l’élément du jour, ou</li>
-    <li>Appuie sur <b>Exporter JSON</b> si Wendy t’a demandé le fichier complet.</li>
-  </ul>
+    <details>
+      <summary>3) Incident (si besoin)</summary>
+      <div class="tBody">
+        <ol>
+          <li>Va dans <b>Incident</b>.</li>
+          <li>Explique en une phrase ce qui s’est passé (contrôle, panne, crevaison, incident client…)</li>
+          <li>Ajoute une photo si utile (ticket, pièce, dégâts…).</li>
+          <li>Appuie sur <b>Enregistrer incident</b>.</li>
+        </ol>
+      </div>
+    </details>
 
-  <div class="divider"></div>
+    <details>
+      <summary>4) Check-out (soir) — obligatoire</summary>
+      <div class="tBody">
+        <ol>
+          <li>Va dans l’onglet <b>Check-out</b>.</li>
+          <li>Entre <b>KM arrivée</b> et <b>Carburant arrivée</b>.</li>
+          <li>Entre <b>Fixe dû</b>, <b>Fixe versé</b> et le mode de paiement.</li>
+          <li>Prends les photos demandées (compteur + jauge + preuve versement si besoin).</li>
+          <li>(Option) <b>📍 Prendre la position</b>.</li>
+          <li>Appuie sur <b>Enregistrer Check-out</b>.</li>
+        </ol>
+      </div>
+    </details>
 
-  <h3>FAQ rapide</h3>
-  <details style="border:1px solid var(--line); border-radius:12px; padding:10px; background:var(--surface); margin-top:10px;">
-    <summary style="cursor:pointer; font-weight:800;">Je n’ai pas internet, ça marche ?</summary>
-    <p class="muted" style="margin:8px 0 0 0;">Oui. Tu enregistres offline. Tu partageras/exporteras quand tu auras du réseau.</p>
-  </details>
+    <details>
+      <summary>5) Export (fin de journée) — à envoyer au manager</summary>
+      <div class="tBody">
+        <ol>
+          <li>Va dans <b>Export</b>.</li>
+          <li>Appuie sur <b>Exporter JSON</b>.</li>
+          <li>Envoie le fichier au manager sur <b>WhatsApp</b>.</li>
+        </ol>
+        <div class="mini">
+          ⚠️ Ne clique pas sur <b>Reset</b> avant d’avoir exporté (sauf si le manager te le demande).
+        </div>
+      </div>
+    </details>
 
-  <details style="border:1px solid var(--line); border-radius:12px; padding:10px; background:var(--surface); margin-top:10px;">
-    <summary style="cursor:pointer; font-weight:800;">Je me suis trompé de KM</summary>
-    <p class="muted" style="margin:8px 0 0 0;">
-      Va dans <b>Historique</b>, retrouve l’enregistrement et supprime-le, puis refais-le correctement.
-    </p>
-  </details>
+    <details>
+      <summary>FAQ rapide</summary>
+      <div class="tBody">
+        <p><b>Je n’ai pas internet.</b> → OK. Fais Check-in/Check-out normalement. Exporte et envoie quand tu retrouves le réseau.</p>
+        <p><b>J’ai mis un mauvais KM.</b> → Va dans <b>Historique</b> et corrige (ou refais l’entrée si l’app te le propose).</p>
+        <p><b>Les photos “prennent trop de place”.</b> → Prends une seule photo claire par document / preuve. Pas de doublons.</p>
+        <p><b>Je ne vois pas le fichier exporté.</b> → Après “Exporter JSON”, regarde dans la barre de téléchargement du navigateur ou dans “Téléchargements”.</p>
+      </div>
+    </details>
 
-  <details style="border:1px solid var(--line); border-radius:12px; padding:10px; background:var(--surface); margin-top:10px;">
-    <summary style="cursor:pointer; font-weight:800;">Les photos prennent trop de place</summary>
-    <p class="muted" style="margin:8px 0 0 0;">
-      On garde seulement compteur + jauge (obligatoire). La preuve OM/MoMo est conseillée. Si besoin, on baissera la qualité photo dans une prochaine version.
-    </p>
-  </details>
-
-  <div class="divider"></div>
-
-  <button class="primary" id="btnGoSettingsFromTut">Aller aux Réglages</button>
+  </div>
 </div>
-
-      <!-- CHECK-IN -->
+<!-- CHECK-IN -->
       <div class="card hide" id="tabCheckin">
         <h2>Check-in (matin)</h2>
         <p class="muted">Minimum : photo compteur + photo jauge.</p>
@@ -612,6 +656,8 @@
       <!-- SETTINGS -->
       <div class="card hide" id="tabSettings">
         <h2>Réglages</h2>
+    
+
         <p class="muted">Ces infos servent à pré-remplir et à signer les rapports.</p>
 
         <div class="row cols2" style="margin-top:10px;">
@@ -652,6 +698,50 @@
         </div>
 <div class="divider"></div>
 
+
+<h2>Documents (une seule fois)</h2>
+<p class="muted">Ces documents servent à l’identification. Format <b>photo</b> uniquement (JPG/PNG). Ils partent avec l’export JSON.</p>
+
+<div class="row cols2" style="margin-top:10px;">
+  <div>
+    <label>Contrat de prestation — numéro</label>
+    <input id="setContractNo" type="text" placeholder="ex: FGS-CTR-2025-001" />
+    <label style="margin-top:10px;">Contrat — photo</label>
+    <input id="setContractPhoto" type="file" accept="image/*" />
+    <div class="note">Photo lisible (numéro + signature si possible).</div>
+    <div class="thumbs" id="contractThumb"></div>
+  </div>
+
+  <div>
+    <label>Assurance — numéro de police</label>
+    <input id="setInsuranceNo" type="text" placeholder="ex: POL-123456" />
+    <label style="margin-top:10px;">Assurance — photo</label>
+    <input id="setInsurancePhoto" type="file" accept="image/*" />
+    <div class="note">Photo de l’attestation (numéro bien visible).</div>
+    <div class="thumbs" id="insuranceThumb"></div>
+  </div>
+</div>
+
+<div class="row cols2" style="margin-top:10px;">
+  <div>
+    <label>Carte grise — numéro</label>
+    <input id="setRegCardNo" type="text" placeholder="ex: CG-2025-001" />
+    <label style="margin-top:10px;">Carte grise — photo</label>
+    <input id="setRegCardPhoto" type="file" accept="image/*" />
+    <div class="note">Photo lisible (numéro + immat si possible).</div>
+    <div class="thumbs" id="regCardThumb"></div>
+  </div>
+
+  <div>
+    <label>Carte d’identité (CNI) — numéro</label>
+    <input id="setIdCardNo" type="text" placeholder="ex: CNI-123456789" />
+    <label style="margin-top:10px;">CNI — photo</label>
+    <input id="setIdCardPhoto" type="file" accept="image/*" />
+    <div class="note">Photo du côté avec la photo + numéro bien visible.</div>
+    <div class="thumbs" id="idCardThumb"></div>
+  </div>
+</div>
+
 <h2>Auto-export (soir)</h2>
 <p class="muted">Génère un export chaque soir. Si la PWA est ouverte, elle te proposera de partager. Sinon, elle te mettra une notif (si autorisée).</p>
 
@@ -691,7 +781,7 @@
       </div>
 
     </div>
-  </div>
+  
 
   <div class="toast" id="toast"></div>
 
@@ -738,6 +828,12 @@
       URL.revokeObjectURL(img.src);
       return data;
     }
+    function renderDocThumb(containerId, dataUrl){
+      const el = document.getElementById(containerId);
+      if(!el) return;
+      if(!dataUrl){ el.innerHTML = ""; return; }
+      el.innerHTML = `<img src="${dataUrl}" alt="doc" />`;
+    }
     function download(filename, content, mime="application/json"){
       const blob = new Blob([content], {type:mime});
       const url = URL.createObjectURL(blob);
@@ -760,6 +856,16 @@
     // =========================
     const KEY_SETTINGS = "fgs_settings_v1";
     const KEY_RECORDS = "fgs_records_v1";
+
+    // ⚠️ Compat : certaines versions utilisent d\'autres noms de clés.
+    const KEY_EVENTS = "fgs_events_v1";
+    const KEY_LOG = "fgs_log_v1";
+
+    // Docs (images compressées en dataURL)
+    let contractDocDataUrl = "";
+    let insuranceDocDataUrl = "";
+    let regCardDocDataUrl = "";
+    let idCardDocDataUrl = "";
     function loadSettings(){
       try { return JSON.parse(localStorage.getItem(KEY_SETTINGS) || "{}"); }
       catch { return {}; }
@@ -768,11 +874,20 @@
       localStorage.setItem(KEY_SETTINGS, JSON.stringify(obj));
     }
     function loadRecords(){
-      try { return JSON.parse(localStorage.getItem(KEY_RECORDS) || "[]"); }
-      catch { return []; }
+      try {
+        const raw = localStorage.getItem(KEY_RECORDS)
+          || localStorage.getItem(KEY_EVENTS)
+          || localStorage.getItem(KEY_LOG)
+          || "[]";
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : [];
+      } catch { return []; }
     }
     function saveRecords(arr){
-      localStorage.setItem(KEY_RECORDS, JSON.stringify(arr));
+      const s = JSON.stringify(arr);
+      localStorage.setItem(KEY_RECORDS, s);
+      localStorage.setItem(KEY_EVENTS, s);
+      localStorage.setItem(KEY_LOG, s);
     }
     function addRecord(rec){
       const arr = loadRecords();
@@ -783,6 +898,8 @@
     function resetAll(){
       localStorage.removeItem(KEY_SETTINGS);
       localStorage.removeItem(KEY_RECORDS);
+      localStorage.removeItem(KEY_EVENTS);
+      localStorage.removeItem(KEY_LOG);
       localStorage.removeItem("fgs_pending_export_v1");
       localStorage.removeItem("fgs_last_export");
 
@@ -794,12 +911,39 @@
     const tabs = [...document.querySelectorAll(".tab")];
     const tabIds = ["tabHome","tabTutorial","tabCheckin","tabCheckout","tabIncidents","tabHistory","tabSettings"];
     function showTab(id){
-      tabIds.forEach(t => $(t).classList.toggle("hide", t !== id));
+      tabIds.forEach(t => {
+        const el = $(t);
+        const isActive = (t === id);
+        el.classList.toggle("hide", !isActive);
+        // sécurité : on force aussi l'affichage via style inline (certains navigateurs/PWA ont des surprises)
+        el.style.display = isActive ? "" : "none";
+      });
       tabs.forEach(b => b.classList.toggle("active", b.dataset.tab === id));
       if(id === "tabHistory") renderHistory();
       if(id === "tabSettings") fillSettingsForm();
     }
     tabs.forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
+
+    // Raccourcis onboarding
+    const btnHomeSettings = document.getElementById("btnGoSettingsFromHome");
+    if(btnHomeSettings) btnHomeSettings.addEventListener("click", () => showTab("tabSettings"));
+// Init onglets + onboarding (première connexion)
+    showTab("tabHome");
+    (function initOnboarding(){
+      let s = {};
+      try { s = JSON.parse(localStorage.getItem(KEY_SETTINGS) || "{}"); } catch(e){}
+      const configured = !!(s.driver && s.vehicle && s.plate);
+      const banner = document.getElementById("firstRunBanner");
+      if(banner) banner.style.display = configured ? "none" : "";
+      const seenKey = "fgs_onboarding_seen_v1";
+      const seen = localStorage.getItem(seenKey) === "1";
+      if(!configured && !seen){
+        // première fois : on envoie direct vers Réglages
+        showTab("tabSettings");
+        localStorage.setItem(seenKey, "1");
+      }
+    })();
+(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
     $("btnGoSettingsFromTut").addEventListener("click", ()=> showTab("tabSettings"));
 
     // =========================
@@ -835,8 +979,41 @@
       $("setAutoExport").value = s.autoExportEnabled ? "1" : "0";
       $("setExportTime").value = s.exportTime || "21:00";
 
+    
+      // Documents
+      const c = s?.docs?.contract || {};
+      const i = s?.docs?.insurance || {};
+      const r = s?.docs?.registrationCard || {};
+      const id = s?.docs?.idCard || {};
+
+      $("setContractNo") && ($("setContractNo").value = c.number || "");
+      $("setInsuranceNo") && ($("setInsuranceNo").value = i.policyNumber || "");
+      $("setRegCardNo") && ($("setRegCardNo").value = r.number || "");
+      $("setIdCardNo") && ($("setIdCardNo").value = id.number || "");
+
+      contractDocDataUrl = c.dataUrl || "";
+      insuranceDocDataUrl = i.dataUrl || "";
+      regCardDocDataUrl = r.dataUrl || "";
+      idCardDocDataUrl = id.dataUrl || "";
+
+      renderDocThumb("contractThumb", contractDocDataUrl);
+      renderDocThumb("insuranceThumb", insuranceDocDataUrl);
+      renderDocThumb("regCardThumb", regCardDocDataUrl);
+      renderDocThumb("idCardThumb", idCardDocDataUrl);
+
     }
-    $("btnSaveSettings").addEventListener("click", ()=>{
+    $("btnSaveSettings").addEventListener("click", async ()=>{
+      // Documents (optionnels) : lecture des photos si sélectionnées
+      const fContract = $("setContractPhoto")?.files?.[0] || null;
+      const fInsurance = $("setInsurancePhoto")?.files?.[0] || null;
+      const fReg = $("setRegCardPhoto")?.files?.[0] || null;
+      const fId = $("setIdCardPhoto")?.files?.[0] || null;
+
+      if (fContract){ contractDocDataUrl = await fileToDataUrl(fContract); renderDocThumb("contractThumb", contractDocDataUrl); $("setContractPhoto").value = ""; }
+      if (fInsurance){ insuranceDocDataUrl = await fileToDataUrl(fInsurance); renderDocThumb("insuranceThumb", insuranceDocDataUrl); $("setInsurancePhoto").value = ""; }
+      if (fReg){ regCardDocDataUrl = await fileToDataUrl(fReg); renderDocThumb("regCardThumb", regCardDocDataUrl); $("setRegCardPhoto").value = ""; }
+      if (fId){ idCardDocDataUrl = await fileToDataUrl(fId); renderDocThumb("idCardThumb", idCardDocDataUrl); $("setIdCardPhoto").value = ""; }
+
       const s = {
         driver: $("setDriver").value.trim(),
         phone: $("setPhone").value.trim(),
@@ -848,6 +1025,25 @@
         autoExportEnabled: $("setAutoExport").value === "1",
         exportTime: $("setExportTime").value || "21:00",
 
+        docs: {
+          contract: {
+            number: $("setContractNo")?.value?.trim() || "",
+            dataUrl: contractDocDataUrl || ""
+          },
+          insurance: {
+            policyNumber: $("setInsuranceNo")?.value?.trim() || "",
+            dataUrl: insuranceDocDataUrl || ""
+          },
+          registrationCard: {
+            number: $("setRegCardNo")?.value?.trim() || "",
+            dataUrl: regCardDocDataUrl || ""
+          },
+          idCard: {
+            number: $("setIdCardNo")?.value?.trim() || "",
+            dataUrl: idCardDocDataUrl || ""
+          }
+        },
+
         updatedAt: new Date().toISOString()
       };
       saveSettings(s);
@@ -858,6 +1054,33 @@
 
       renderKpis();
     });
+
+    // Prévisualisation documents dès la sélection (optionnel)
+    $("setContractPhoto")?.addEventListener("change", async (e)=>{
+      const f = e.target.files?.[0]; if(!f) return;
+      contractDocDataUrl = await fileToDataUrl(f);
+      renderDocThumb("contractThumb", contractDocDataUrl);
+      toast("Photo contrat prête");
+    });
+    $("setInsurancePhoto")?.addEventListener("change", async (e)=>{
+      const f = e.target.files?.[0]; if(!f) return;
+      insuranceDocDataUrl = await fileToDataUrl(f);
+      renderDocThumb("insuranceThumb", insuranceDocDataUrl);
+      toast("Photo assurance prête");
+    });
+    $("setRegCardPhoto")?.addEventListener("change", async (e)=>{
+      const f = e.target.files?.[0]; if(!f) return;
+      regCardDocDataUrl = await fileToDataUrl(f);
+      renderDocThumb("regCardThumb", regCardDocDataUrl);
+      toast("Photo carte grise prête");
+    });
+    $("setIdCardPhoto")?.addEventListener("change", async (e)=>{
+      const f = e.target.files?.[0]; if(!f) return;
+      idCardDocDataUrl = await fileToDataUrl(f);
+      renderDocThumb("idCardThumb", idCardDocDataUrl);
+      toast("Photo CNI prête");
+    });
+
 
     // =========================
     // Prefill date/time
@@ -1155,9 +1378,14 @@ function buildExportPack(){
   const s = loadSettings();
   const recs = loadRecords();
   return {
+    schemaVersion: 2,
     exportedAt: new Date().toISOString(),
     settings: s,
-    records: recs
+
+    // Compat : certains viewers attendent "records", d'autres "events"/"timeline"
+    records: recs,
+    events: recs,
+    timeline: recs
   };
 }
 
