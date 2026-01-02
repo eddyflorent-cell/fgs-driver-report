@@ -268,6 +268,7 @@
         <button class="primary" id="btnInstall">Installer</button>
         <button class="primary" id="btnImport">Importer un report</button>
         <button id="btnExportArchive">Exporter archive (JSON)</button>
+      <button class="btn primary" id="btnShareArchive">Partager archive (Mail/Drive)</button>
         <button class="danger" id="btnWipe">Tout effacer</button>
       </div>
     </div>
@@ -545,6 +546,51 @@ window.addEventListener("appinstalled", () => {
   setInstallBtnState();
 });
 
-  </script>
+  
+// --- Partage (Mail / Drive / WhatsApp) ---
+async function shareFile(blob, filename, title, text){
+  try{
+    if(!("share" in navigator)) return false;
+    const file = new File([blob], filename, { type: blob.type || "application/octet-stream" });
+    if(navigator.canShare && !navigator.canShare({ files: [file] })) return false;
+    await navigator.share({ title: title || filename, text: text || "", files: [file] });
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+
+document.getElementById("btnShareArchive").addEventListener("click", async () => {
+  try{
+    // Reprend la même archive que "Exporter archive"
+    const archive = loadArchive ? loadArchive() : (JSON.parse(localStorage.getItem("fgs_manager_archive")||"[]"));
+    const payload = { exportedAt: new Date().toISOString(), archive };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const filename = `FGS-Manager-Archive-${new Date().toISOString().slice(0,10)}.json`;
+
+    // Mobile: menu de partage -> Drive / Gmail / WhatsApp
+    const ok = await shareFile(blob, filename, "FGS Driver Manager", "Archive FGS (JSON) — sauvegarde Drive ou envoi mail.");
+    if(ok){
+      toast && toast("Partage ouvert (Drive/Mail/WhatsApp)");
+      return;
+    }
+
+    // PC: fallback téléchargement (puis tu joins au mail / Drive)
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 400);
+    toast && toast("Téléchargé. Ensuite : ajoute sur Drive ou envoie par mail.");
+  }catch(err){
+    alert("Impossible de partager l’archive. Essaie Exporter archive (JSON) puis envoie le fichier.");
+  }
+});
+
+</script>
 </body>
 </html>
