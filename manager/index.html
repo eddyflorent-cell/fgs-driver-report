@@ -251,6 +251,8 @@
     display:none;
   }
   .toast.show{ display:block; }
+
+  dialog::backdrop { background: rgba(0,0,0,.35); }
 </style>
 
 </head>
@@ -315,8 +317,91 @@
   <div class="toast" id="toast"></div>
 
   <script>
+
     const $ = (id)=>document.getElementById(id);
     const KEY = "fgs_manager_archive_v1"; // stores array of packs
+
+function buildArchiveBlob(){
+  const archive = loadArchive();
+  const payload = { exportedAt: new Date().toISOString(), archive };
+  return new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+}
+
+function downloadBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 800);
+}
+
+function openShareHelp(filename){
+  const dlg = $("shareHelpDialog");
+  if(!dlg) return;
+
+  $("shareHelpFilename").textContent = filename;
+
+  const msg =
+`Bonjour Wendy,
+Voici l'archive FGS Driver Manager : ${filename}
+
+Étapes :
+1) Je te l'envoie / je le mets sur Drive
+2) Tu l'importes dans FGS Driver Manager (Importer un report)
+
+Merci.`;
+
+  $("btnCopyShareText").onclick = async ()=>{
+    try{
+      await navigator.clipboard.writeText(msg);
+      toast("Message copié");
+    }catch(e){
+      const ta = document.createElement("textarea");
+      ta.value = msg;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+      toast("Message copié");
+    }
+  };
+
+  $("btnOpenWhatsAppWeb").onclick = ()=> window.open("https://web.whatsapp.com/", "_blank");
+  $("btnOpenMail").onclick = ()=>{
+    const subject = encodeURIComponent("Archive FGS Driver Manager");
+    const body = encodeURIComponent(msg + "\n\n(Attache le fichier JSON téléchargé.)");
+    window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
+  };
+  $("btnOpenDrive").onclick = ()=> window.open("https://drive.google.com/drive/my-drive", "_blank");
+
+  $("btnCloseShareHelp").onclick = ()=> dlg.close();
+  dlg.showModal();
+}
+
+async function shareArchiveNow(){
+  const filename = `FGS-Manager-Archive-${new Date().toISOString().slice(0,10)}.json`;
+  const blob = buildArchiveBlob();
+  const file = new File([blob], filename, {type:"application/json"});
+
+  try{
+    if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+      await navigator.share({ title:"FGS Driver Manager", text:"Archive FGS Driver Manager", files:[file] });
+      toast("Partage ouvert");
+      return;
+    }
+  }catch(err){
+    console.warn("navigator.share failed:", err);
+  }
+
+  downloadBlob(blob, filename);
+  toast("Téléchargé. Choisis ensuite WhatsApp/Mail/Drive.");
+  openShareHelp(filename);
+}
+
+
     const toastEl = $("toast");
 
     function toast(msg){
@@ -425,22 +510,134 @@
     }
 
     async function importPackFromFile(file){
-      const text = await file.text();
-      let pack;
-      try { pack = JSON.parse(text); } catch { toast("JSON invalide"); return; }
-      if(!pack || !Array.isArray(pack.records)){ toast("Format report non reconnu"); return; }
+  try{
+    const text = await file.text();
+    const raw = JSON.parse(text);
 
-      // Normalize + stamp
-      pack.importedAt = new Date().toISOString();
-      pack.sourceFilename = file.name || "report.json";
+    const _get = (obj, path) => {
+      try { return path.split(".").reduce((a,k)=> (a && a[k] !== undefined) ? a[k] : undefined, obj); }
+      catch(e){ return undefined; }
+    };
+    const pick = (...vals)=> vals.find(v=>v!==undefined && v!==null && String(v).trim()!=="");
 
+    const normalizeSettings = (obj)=>{
+      const s = (obj && typeof obj.settings==="object") ? {...obj.settings} : {};
+      s.driver = pick(s.driver, obj.driver, obj.chauffeur, obj.driverName, obj.nomChauffeur, _get(obj,"meta.driver"), _get(obj,"profile.driver"));
+      s.vehicle = pick(s.vehicle, obj.vehicle, obj.vehicule, obj.vehicleName, obj.modeleVehicule, _get(obj,"meta.vehicle"));
+      s.plate = pick(s.plate, obj.plate, obj.immatriculation, obj.plateNumber, _get(obj,"meta.plate"));
+      return s;
+    };
+
+    const normalizePhotos = (r)=>{
+      if(r.photos && typeof r.photos==="object") return r.photos;
+      const photos = {};
+      photos.odometer = pick(r.photoOdometer, r.photoKm, r.photoCompteur, r.kmPhoto);
+      photos.fuel = pick(r.photoFuel, r.photoCarburant, r.fuelPhoto);
+      photos.payment = pick(r.photoPayment, r.photoVersement, r.paymentPhoto);
+      photos.damage = pick(r.photoDamage, r.photoDegat, r.damagePhoto);
+      for(const k of Object.keys(photos)){ if(!photos[k]) delete photos[k]; }
+      return Object.keys(photos).length ? photos : undefined;
+    };
+
+    const normalizeRecord = (r, s)=>{
+      if(!r || typeof r!=="object") return null;
+      const out = {...r};
+      out.type = (out.type || out.kind || out.eventType || out.action || "").toString().toLowerCase();
+      if(out.type === "check-in") out.type = "checkin";
+      if(out.type === "check-out") out.type = "checkout";
+      out.driver = pick(out.driver, out.chauffeur, out.driverName, s?.driver);
+      out.vehicle = pick(out.vehicle, out.vehicule, out.vehicleName, s?.vehicle);
+      out.plate = pick(out.plate, out.immatriculation, out.plateNumber, s?.plate);
+
+      if(!out.date){
+        const dt = pick(out.datetime, out.dateTime, out.timestamp, out.ts);
+        if(dt){
+          const d = new Date(dt);
+          if(!Number.isNaN(d.getTime())){
+            out.date = d.toISOString().slice(0,10);
+            out.time = out.time || d.toTimeString().slice(0,5);
+          }
+        }
+      }
+      out.time = out.time || out.heure || out.hour || "";
+
+      if(out.km === undefined) out.km = pick(out.kilometrage, out.odometer, out.kmDepart, out.kmArrivee, out.km_start, out.km_end);
+      if(out.fuel === undefined) out.fuel = pick(out.carburant, out.jauge, out.fuelLevel, out.fuel_start, out.fuel_end);
+
+      if(out.fixedDue === undefined) out.fixedDue = pick(out.fixeDu, out.fixe_due, out.fixed_due);
+      if(out.fixedPaid === undefined) out.fixedPaid = pick(out.fixeVerse, out.fixe_paye, out.fixed_paid);
+      out.payMode = out.payMode || out.modePaiement || out.paymentMode || "";
+
+      out.note = out.note || out.remarque || out.comment || out.observation || "";
+      out.desc = out.desc || out.description || out.incident || out.probleme || "";
+
+      const photos = normalizePhotos(out);
+      if(photos) out.photos = photos;
+      return out;
+    };
+
+    const extractRecords = (obj)=>{
+      if(!obj) return null;
+      if(Array.isArray(obj.records)) return obj.records;
+      if(Array.isArray(obj.events)) return obj.events;
+      if(Array.isArray(obj.items)) return obj.items;
+      if(Array.isArray(obj.entries)) return obj.entries;
+      if(Array.isArray(obj.enregistrements)) return obj.enregistrements;
+      if(Array.isArray(obj.logs)) return obj.logs;
+      if(Array.isArray(obj.history)) return obj.history;
+      if(Array.isArray(_get(obj,"data.records"))) return _get(obj,"data.records");
+      if(Array.isArray(_get(obj,"report.records"))) return _get(obj,"report.records");
+      if(Array.isArray(_get(obj,"payload.records"))) return _get(obj,"payload.records");
+      if(Array.isArray(obj)) return obj;
+      return null;
+    };
+
+    const buildPackFromRaw = (obj)=>{
+      const recs = extractRecords(obj);
+      if(!recs) return null;
+      const settings = normalizeSettings(obj);
+      const records = recs.map(r=>normalizeRecord(r, settings)).filter(Boolean);
+      return {
+        settings,
+        records,
+        sourceApp: obj?.sourceApp || obj?.app || obj?.appName || "FGS Driver Report",
+        createdAt: obj?.createdAt || obj?.exportedAt || obj?.generatedAt || obj?.date || ""
+      };
+    };
+
+    // If user imports an exported archive from Manager, merge it.
+    if(raw && Array.isArray(raw.archive) && !Array.isArray(raw.records)){
+      const packs = raw.archive.map(p=>buildPackFromRaw(p)).filter(Boolean);
+      if(packs.length === 0){ toast("Format archive non reconnu"); return; }
       const archive = loadArchive();
-      archive.unshift(pack);
+      for(const p of packs.reverse()){
+        p.importedAt = new Date().toISOString();
+        p.sourceFilename = file.name || "archive.json";
+        archive.unshift(p);
+      }
       saveArchive(archive);
-
-      toast("Report importé");
+      toast(`${packs.length} report(s) importé(s)`);
       render();
+      return;
     }
+
+    const pack = buildPackFromRaw(raw);
+    if(!pack){ toast("Format report non reconnu"); return; }
+
+    pack.importedAt = new Date().toISOString();
+    pack.sourceFilename = file.name || "report.json";
+
+    const archive = loadArchive();
+    archive.unshift(pack);
+    saveArchive(archive);
+
+    toast("Report importé");
+    render();
+  }catch(err){
+    console.error(err);
+    toast("Erreur import: " + (err?.message || err));
+  }
+}
 
     $("fileInput").addEventListener("change", async (e)=>{
       const f = e.target.files?.[0];
@@ -454,6 +651,9 @@
     $("btnExportArchive").addEventListener("click", ()=>{
       const archive = loadArchive();
       const blob = new Blob([JSON.stringify({ exportedAt:new Date().toISOString(), archive }, null, 2)], {type:"application/json"});
+
+$("btnShareArchive").addEventListener("click", shareArchiveNow);
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -560,37 +760,37 @@ async function shareFile(blob, filename, title, text){
   }
 }
 
-
-document.getElementById("btnShareArchive").addEventListener("click", async () => {
-  try{
-    // Reprend la même archive que "Exporter archive"
-    const archive = loadArchive ? loadArchive() : (JSON.parse(localStorage.getItem("fgs_manager_archive")||"[]"));
-    const payload = { exportedAt: new Date().toISOString(), archive };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const filename = `FGS-Manager-Archive-${new Date().toISOString().slice(0,10)}.json`;
-
-    // Mobile: menu de partage -> Drive / Gmail / WhatsApp
-    const ok = await shareFile(blob, filename, "FGS Driver Manager", "Archive FGS (JSON) — sauvegarde Drive ou envoi mail.");
-    if(ok){
-      toast && toast("Partage ouvert (Drive/Mail/WhatsApp)");
-      return;
-    }
-
-    // PC: fallback téléchargement (puis tu joins au mail / Drive)
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url), 400);
-    toast && toast("Téléchargé. Ensuite : ajoute sur Drive ou envoie par mail.");
-  }catch(err){
-    alert("Impossible de partager l’archive. Essaie Exporter archive (JSON) puis envoie le fichier.");
-  }
-});
-
 </script>
+
+<!-- Partage assisté (fallback desktop) -->
+<dialog id="shareHelpDialog" style="border:none; border-radius:16px; padding:0; max-width:720px; width:min(92vw,720px);">
+  <div style="padding:16px 16px 14px 16px; border-bottom:1px solid rgba(0,0,0,.08); display:flex; align-items:center; justify-content:space-between; gap:12px;">
+    <div>
+      <div style="font-weight:900;">Partager l’archive</div>
+      <div class="muted" style="margin-top:2px;">Ton navigateur ne peut pas ouvrir le menu de partage “téléphone” sur PC. On t’aide à partager quand même.</div>
+    </div>
+    <button class="btn" id="btnCloseShareHelp" type="button">Fermer</button>
+  </div>
+
+  <div style="padding:14px 16px 16px 16px;">
+    <div class="card" style="margin:0; padding:12px;">
+      <div class="muted">1) Le fichier a été téléchargé :</div>
+      <div style="font-weight:800; margin-top:6px;" id="shareHelpFilename">—</div>
+      <div class="muted" style="margin-top:6px;">➡️ Dans Gmail/WhatsApp/Drive, clique “Joindre” puis choisis ce fichier dans <b>Téléchargements</b> (ou “Récents”).</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px; margin-top:12px;">
+      <button class="btn primary" id="btnCopyShareText" type="button">Copier un message</button>
+      <button class="btn" id="btnOpenWhatsAppWeb" type="button">Ouvrir WhatsApp Web</button>
+      <button class="btn" id="btnOpenMail" type="button">Ouvrir mail</button>
+      <button class="btn" id="btnOpenDrive" type="button">Ouvrir Google Drive</button>
+    </div>
+
+    <div class="muted" style="margin-top:10px;">
+      Sur <b>Android/iPhone</b>, le bouton ouvre le menu de partage (WhatsApp, Telegram, Mail, Drive, etc.). Sur PC, c’est une limite du navigateur.
+    </div>
+  </div>
+</dialog>
+
 </body>
 </html>

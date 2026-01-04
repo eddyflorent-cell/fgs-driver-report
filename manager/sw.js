@@ -1,4 +1,4 @@
-const CACHE = "fgs-manager-v6";
+const CACHE = "fgs-driver-manager-v8";
 const ASSETS = [
   "./",
   "./index.html",
